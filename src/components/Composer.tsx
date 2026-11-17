@@ -3,7 +3,7 @@ import { ArrowUp, ChevronDown, Code2, Info, SlidersHorizontal, Upload } from 'lu
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { estimateCost, formatUSD, isUsageBilled, startingPriceLabel } from '../lib/cost';
 import { modKey } from '../lib/format';
-import { getPresets, type Preset } from '../lib/presets';
+import { getPresets } from '../lib/presets';
 import {
   buildInput,
   getMediaFields,
@@ -11,25 +11,23 @@ import {
   getUnsupportedRequired,
   hasPrompt,
   humanize,
-  initialParams,
   splitParamFields,
-  type Params,
 } from '../lib/schema';
 import { useComposer, useCurrentModel, useSettings, useUI } from '../lib/store';
 import { addFiles, generate, kindOfFile } from '../lib/tasks';
 import type { CatalogModel, Variant } from '../types/catalog';
-import { Chip, cn, Dialog, Kbd, Popover, Shake, Spinner, Tooltip } from '../ui';
+import { Chip, cn, Dialog, Kbd, Popover, Shake, Spinner, Tooltip, useMediaQuery } from '../ui';
 import { CodeTabs } from './CodeTabs';
 import { AttachButton, MediaTray } from './MediaTray';
 import { useMediaPicker } from './useMediaPicker';
-import { ModelThumb } from './ModelThumb';
+import { ProviderIcon } from './ModelThumb';
 import { FieldEditor, MoreParams, ParamChip } from './ParamControls';
 
 // ---------------------------------------------------------------- pieces
 
-function ModelButton({ model, preview, fill }: { model: CatalogModel; preview?: CatalogModel; fill?: boolean }) {
+function ModelButton({ model, fill }: { model: CatalogModel; fill?: boolean }) {
   const setOpen = useUI((s) => s.setPaletteOpen);
-  const shown = preview ?? model;
+  const shown = model;
   return (
     <Tooltip
       label={<span className="inline-flex items-center gap-1">Switch model · {modKey} K</span>}
@@ -54,7 +52,7 @@ function ModelButton({ model, preview, fill }: { model: CatalogModel; preview?: 
             transition={{ duration: 0.2 }}
             className="flex min-w-0 flex-1 items-center gap-2"
           >
-            <ModelThumb model={shown} className="size-6 rounded-xs" />
+            <ProviderIcon model={shown} />
             <span className="truncate">{shown.name}</span>
           </motion.span>
         </AnimatePresence>
@@ -217,19 +215,6 @@ function useFileDrop(enabled: boolean) {
   return dragging;
 }
 
-function useMediaQuery(query: string): boolean {
-  const [match, setMatch] = useState(() => window.matchMedia?.(query).matches ?? false);
-  useEffect(() => {
-    const mq = window.matchMedia?.(query);
-    if (!mq) return;
-    const on = () => setMatch(mq.matches);
-    on();
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
-  }, [query]);
-  return match;
-}
-
 // ---------------------------------------------------------------- animated placeholder
 
 const TYPE_MS = 35;
@@ -237,41 +222,42 @@ const HOLD_MS = 1800;
 const DELETE_MS = 15;
 
 /**
- * Types real example prompts into the placeholder (DOM-only, no re-render per character) and
- * reports which preset is showing so the model chip and price can follow along.
+ * Types real example prompts into the placeholder as a muted ghost hint
+ * ("Seedance 2.5 Flash · A cinematic…"). DOM-only (no re-render per character), never touches
+ * the real model, chips or price, and is truncated to two lines on narrow screens.
  */
-function useTypewriter(
-  ref: React.RefObject<HTMLTextAreaElement | null>,
-  enabled: boolean,
-  fallback: string,
-): Preset | undefined {
+function useTypewriter(ref: React.RefObject<HTMLTextAreaElement | null>, enabled: boolean, fallback: string): void {
   const presets = useMemo(() => getPresets().filter((p) => p.prompt.length <= 140), []);
-  const [current, setCurrent] = useState<Preset | undefined>();
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (!enabled || presets.length === 0) {
       el.placeholder = fallback;
-      setCurrent(undefined);
       return;
     }
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
     let i = Math.floor(Math.random() * presets.length);
     const wait = (ms: number) => new Promise<void>((r) => (timer = setTimeout(r, ms)));
+    // ~2 lines of characters for the current width (16px font ≈ 8px per char).
+    const maxChars = () => Math.max(24, Math.floor((el.clientWidth - 24) / 8.2) * 2 - 2);
+    const show = (text: string) => {
+      const max = maxChars();
+      el.placeholder = text.length > max ? `${text.slice(0, max - 1)}…` : text;
+    };
     (async () => {
       await wait(600);
       while (!cancelled) {
         const p = presets[i % presets.length];
-        setCurrent(p);
+        const prefix = `${p.model.name} · `;
         for (let n = 1; n <= p.prompt.length && !cancelled; n++) {
-          el.placeholder = p.prompt.slice(0, n);
+          show(prefix + p.prompt.slice(0, n));
           await wait(TYPE_MS);
         }
         await wait(HOLD_MS);
         for (let n = p.prompt.length; n >= 0 && !cancelled; n--) {
-          el.placeholder = p.prompt.slice(0, n);
+          show(prefix + p.prompt.slice(0, n));
           await wait(DELETE_MS);
         }
         i++;
@@ -281,11 +267,8 @@ function useTypewriter(
       cancelled = true;
       clearTimeout(timer);
       el.placeholder = fallback;
-      setCurrent(undefined);
     };
   }, [ref, enabled, presets, fallback]);
-
-  return enabled ? current : undefined;
 }
 
 // ---------------------------------------------------------------- composer
@@ -305,9 +288,29 @@ export function Composer() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [focused, setFocused] = useState(false);
   const narrow = useMediaQuery('(max-width: 639px)');
+  // The placeholder preview stops for the session as soon as the user touches the composer.
+  const [previewStopped, setPreviewStopped] = useState(false);
+  const stopPreview = () => setPreviewStopped(true);
+  const modelId = useComposer((s) => s.modelId);
+  const firstModel = useRef(modelId);
+  useEffect(() => {
+    if (modelId !== firstModel.current) setPreviewStopped(true);
+  }, [modelId]);
   const setVariant = useComposer((s) => s.setVariant);
   const reduce = useReducedMotion();
   const { pick, input: pickerInput } = useMediaPicker();
+  const composerRef = useRef<HTMLDivElement>(null);
+
+  // Expose the composer height so the page can keep content clear of it.
+  useEffect(() => {
+    const el = composerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() =>
+      document.documentElement.style.setProperty('--composer-h', `${Math.round(el.getBoundingClientRect().height)}px`),
+    );
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [model]);
 
   useAutoGrow(taRef, prompt);
 
@@ -341,32 +344,19 @@ export function Composer() {
         ? 'Describe the video you want to create…'
         : 'Describe the image you want to create…'
       : `${model.name} doesn't use a prompt — add references instead.`;
-  const demo = useTypewriter(taRef, !reduce && !focused && !prompt && media.length === 0 && promptEnabled, fallbackPlaceholder);
-
-  const estimate = useMemo(() => {
-    if (demo) return estimateCost(demo.variant, demo.example.input);
-    return variant ? estimateCost(variant, input) : null;
-  }, [demo, variant, input]);
-
-  // While the placeholder previews another model, show that model's own settings (inert).
-  const shownMediaFields = useMemo(
-    () => (demo ? getMediaFields(demo.variant, demo.model.category) : mediaFields),
-    [demo, mediaFields],
+  useTypewriter(
+    taRef,
+    !previewStopped && !reduce && !focused && !prompt && media.length === 0 && promptEnabled,
+    fallbackPlaceholder,
   );
-  const shown = useMemo(
-    () =>
-      demo
-        ? { ...splitParamFields(getParamFields(demo.variant)), params: initialParams(demo.variant, demo.example.input as Params) }
-        : { primary, more, params },
-    [demo, primary, more, params],
-  );
+
+  const estimate = useMemo(() => (variant ? estimateCost(variant, input) : null), [variant, input]);
 
   const dragging = useFileDrop(mediaFields.length > 0);
 
   if (!model || !variant) return null;
   const moreInvalid = !!invalid && more.some((f) => f.name === invalid.field);
-  const hasParams = shown.primary.length > 0 || shown.more.length > 0;
-  const shownKey = demo ? `demo:${demo.key}` : variant.model;
+  const hasParams = primary.length > 0 || more.length > 0;
 
   const codeButton = (
     <Tooltip label="Copy as code" side="top">
@@ -400,7 +390,7 @@ export function Composer() {
         disabled={submitting}
         aria-busy={submitting || undefined}
         aria-keyshortcuts="Control+Enter Meta+Enter"
-        aria-label={estimate && !demo ? `Generate, about ${formatUSD(estimate.usd)}` : 'Generate'}
+        aria-label={estimate ? `Generate, about ${formatUSD(estimate.usd)}` : 'Generate'}
         className="inline-flex h-9 shrink-0 items-center gap-2 rounded-sm bg-accent px-3 text-sm font-medium whitespace-nowrap text-accent-fg shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] transition-[background-color,transform] duration-150 select-none hover:bg-accent-hover active:scale-[0.97] disabled:opacity-70 max-sm:h-11 sm:px-3.5"
       >
         {submitting ? <Spinner size={15} /> : <ArrowUp size={16} strokeWidth={2.25} />}
@@ -415,52 +405,38 @@ export function Composer() {
     </Tooltip>
   );
 
-  /** References + settings for the shown model; crossfades with the preview, inert while previewing. */
-  const shownControls = (wide: boolean) => (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={shownKey}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        inert={!!demo}
-        aria-hidden={demo ? true : undefined}
-        className={cn('flex items-center gap-1.5', wide ? 'flex-wrap sm:gap-x-2 sm:gap-y-2' : 'shrink-0')}
-      >
-        {shownMediaFields.length > 0 && (
-          <Group label="References" divider={wide}>
-            <AttachButton fields={shownMediaFields} onPick={pick} />
-          </Group>
-        )}
-        {hasParams &&
-          (wide ? (
-            <Group label="Settings" divider>
-              {shown.primary.map((f) => (
-                <Shake key={f.name} active={!demo && invalid?.field === f.name} nonce={invalid?.nonce}>
-                  <ParamChip field={f} value={shown.params[f.name]} onChange={(v) => setParam(f.name, v)} />
-                </Shake>
-              ))}
-              <Shake active={!demo && moreInvalid} nonce={invalid?.nonce}>
-                <MoreParams fields={shown.more} params={shown.params} onChange={setParam} />
+  /** References + settings for the selected model. */
+  const controls = (wide: boolean) => (
+    <div className={cn('flex items-center gap-1.5', wide ? 'flex-wrap sm:gap-x-2 sm:gap-y-2' : 'shrink-0')}>
+      {mediaFields.length > 0 && (
+        <Group label="References" divider={wide}>
+          <AttachButton fields={mediaFields} onPick={pick} />
+        </Group>
+      )}
+      {hasParams &&
+        (wide ? (
+          <Group label="Settings" divider>
+            {primary.map((f) => (
+              <Shake key={f.name} active={invalid?.field === f.name} nonce={invalid?.nonce}>
+                <ParamChip field={f} value={params[f.name]} onChange={(v) => setParam(f.name, v)} />
               </Shake>
-            </Group>
-          ) : (
-            <Shake
-              active={!demo && !!invalid && [...primary, ...more].some((f) => f.name === invalid.field)}
-              nonce={invalid?.nonce}
-            >
-              <Chip
-                aria-label="Settings"
-                aria-haspopup="dialog"
-                onClick={() => setSheetOpen(true)}
-                icon={<SlidersHorizontal size={16} />}
-                className="h-11 px-3.5"
-              />
+            ))}
+            <Shake active={moreInvalid} nonce={invalid?.nonce}>
+              <MoreParams fields={more} params={params} onChange={setParam} />
             </Shake>
-          ))}
-      </motion.div>
-    </AnimatePresence>
+          </Group>
+        ) : (
+          <Shake active={!!invalid && [...primary, ...more].some((f) => f.name === invalid.field)} nonce={invalid?.nonce}>
+            <Chip
+              aria-label="Settings"
+              aria-haspopup="dialog"
+              onClick={() => setSheetOpen(true)}
+              icon={<SlidersHorizontal size={16} />}
+              className="h-11 px-3.5"
+            />
+          </Shake>
+        ))}
+    </div>
   );
 
   return (
@@ -475,7 +451,10 @@ export function Composer() {
             'focus-within:border-[color-mix(in_oklab,var(--accent)_55%,var(--line-strong))] sm:focus-within:shadow-[0_0_0_4px_var(--accent-soft),var(--shadow-lg)]',
             'pb-[env(safe-area-inset-bottom)] sm:pb-0',
           )}
+          ref={composerRef}
           onDragOver={(e) => e.preventDefault()}
+          onPointerDownCapture={stopPreview}
+          onFocusCapture={stopPreview}
         >
           {pickerInput}
           <MediaTray fields={mediaFields} onPick={pick} />
@@ -509,18 +488,18 @@ export function Composer() {
 
           {narrow ? (
             <div className="flex items-center gap-1.5 px-2.5 pb-2.5">
-              <ModelButton model={model} preview={demo?.model} fill />
-              {shownControls(false)}
+              <ModelButton model={model} fill />
+              {controls(false)}
               {generateButton}
             </div>
           ) : (
             <div className="flex items-end gap-2 px-2.5 pb-2.5">
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 py-0.5 sm:gap-x-2 sm:gap-y-2">
                 <Group label="Model">
-                  <ModelButton model={model} preview={demo?.model} />
-                  {!demo && <VariantPicker model={model} variant={variant} />}
+                  <ModelButton model={model} />
+                  <VariantPicker model={model} variant={variant} />
                 </Group>
-                {shownControls(true)}
+                {controls(true)}
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 {!estimate && (

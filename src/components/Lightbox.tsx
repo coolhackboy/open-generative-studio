@@ -135,6 +135,38 @@ function Stage({ gen, index }: { gen: Generation; index: number }) {
   );
 }
 
+/** Long prompts: wrap any word, clamp to 6 lines with "Show more", follow the text's direction. */
+function ExpandablePrompt({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [open, setOpen] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) setOverflows(el.scrollHeight > el.clientHeight + 1);
+  }, [text]);
+  return (
+    <div>
+      <p
+        ref={ref}
+        dir="auto"
+        className={cn('text-base whitespace-pre-wrap text-fg [overflow-wrap:anywhere]', !open && 'line-clamp-6')}
+      >
+        {text}
+      </p>
+      {(overflows || open) && (
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className="mt-1 text-sm font-medium text-accent-ink hover:underline"
+        >
+          {open ? 'Show less' : 'Show more'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
     <section className="border-t border-line px-5 py-4">
@@ -390,7 +422,7 @@ export function Lightbox() {
                   </button>
                 )}
               </div>
-              <p className="text-base whitespace-pre-wrap text-fg">{gen.prompt || '—'}</p>
+              <ExpandablePrompt key={gen.id} text={gen.prompt || '—'} />
               {params.length > 0 && (
                 <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Settings">
                   {params.map(([k, v]) => (

@@ -114,6 +114,20 @@ async function parse(res: Response): Promise<unknown> {
   return body.data;
 }
 
+const offlineMessage = () =>
+  typeof navigator !== 'undefined' && navigator.onLine === false
+    ? "You're offline — nothing was sent"
+    : 'Network error — couldn’t reach the API';
+
+/** fetch() that turns network failures ("Failed to fetch") into a readable ApiError. */
+async function net(url: string, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch {
+    throw new ApiError(offlineMessage(), 0);
+  }
+}
+
 function asState(s: unknown): TaskState {
   return s === 'running' || s === 'finished' || s === 'failed' ? s : 'not_started';
 }
@@ -136,7 +150,7 @@ export function createPoyoClient(getAuth: () => { apiKey: string; baseUrl: strin
 
   return {
     async submit(model, input) {
-      const res = await fetch(url('/api/generate/submit'), {
+      const res = await net(url('/api/generate/submit'), {
         method: 'POST',
         headers: headers(true),
         body: JSON.stringify({ model, input }),
@@ -147,7 +161,7 @@ export function createPoyoClient(getAuth: () => { apiKey: string; baseUrl: strin
     },
 
     async status(taskId) {
-      const res = await fetch(url(`/api/generate/status/${encodeURIComponent(taskId)}`), {
+      const res = await net(url(`/api/generate/status/${encodeURIComponent(taskId)}`), {
         headers: headers(false),
       });
       const d = ((await parse(res)) ?? {}) as {
@@ -180,7 +194,7 @@ export function createPoyoClient(getAuth: () => { apiKey: string; baseUrl: strin
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
         };
-        xhr.onerror = () => reject(new ApiError('Network error while uploading', 0));
+        xhr.onerror = () => reject(new ApiError(offlineMessage(), 0));
         xhr.onload = () => {
           let body: Envelope | null = null;
           try {

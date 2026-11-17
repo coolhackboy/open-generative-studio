@@ -142,7 +142,8 @@ export function Gallery() {
 
   if (items.length === 0) {
     return (
-      <div className="-mx-3 -mt-2 sm:-mx-6">
+      // Full-bleed: break out of the max-width container on wide screens.
+      <div className="relative left-1/2 -mt-2 w-screen -translate-x-1/2">
         <ShowcaseHero />
       </div>
     );
@@ -163,6 +164,7 @@ export function Gallery() {
         <Segmented<GalleryFilter>
           label="Filter gallery"
           size="sm"
+          className="max-sm:[&_[role=radio]]:h-9"
           value={filter}
           onChange={setFilter}
           options={[

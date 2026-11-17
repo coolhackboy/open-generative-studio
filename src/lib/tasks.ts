@@ -105,6 +105,16 @@ async function tick(id: string): Promise<void> {
   }
 }
 
+// Back online: poll every running task right away instead of waiting out the backoff.
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    for (const id of [...timers.keys()]) {
+      failures.delete(id);
+      schedule(id, 200 + Math.random() * 600);
+    }
+  });
+}
+
 export function track(id: string): void {
   failures.delete(id);
   schedule(id, FAST_MS);
@@ -142,7 +152,12 @@ async function submitGeneration(gen: Generation): Promise<boolean> {
     const message = e instanceof Error ? e.message : 'Request failed';
     // The provider rejected (or never received) the request: nothing was billed, so don't keep an estimate.
     patch(gen.id, { status: 'failed', error: message, notSent: true, estimateUSD: undefined });
-    toast.show({ title: 'Not sent — nothing billed', description: message, tone: 'danger' });
+    const offline = e instanceof ApiError && e.code === 0;
+    toast.show({
+      title: offline ? message : 'Not sent — nothing billed',
+      description: offline ? 'Reconnect, then press Generate again.' : message,
+      tone: 'danger',
+    });
     if (e instanceof ApiError && e.code === 401) useUI.getState().setSettingsOpen(true);
     return false;
   }

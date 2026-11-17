@@ -64,7 +64,7 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <TopBar />
-      <main className="mx-auto max-w-[1800px] px-3 pt-2 pb-[260px] sm:px-6 sm:pb-[220px]">
+      <main className="mx-auto max-w-[1800px] px-3 pt-2 pb-[calc(var(--composer-h,140px)+24px+env(safe-area-inset-bottom))] sm:px-6 sm:pb-[calc(var(--composer-h,120px)+44px)]">
         <Gallery />
       </main>
       <Composer />

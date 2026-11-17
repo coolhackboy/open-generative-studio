@@ -29,7 +29,7 @@ function CardAction({ label, onClick, children }: { label: string; onClick: () =
           e.stopPropagation();
           onClick();
         }}
-        className="inline-flex size-8 items-center justify-center rounded-sm bg-black/50 text-white/90 backdrop-blur-md transition-colors hover:bg-black/75 hover:text-white"
+        className="relative inline-flex size-8 items-center justify-center rounded-sm bg-black/50 text-white/90 backdrop-blur-md transition-colors before:absolute before:-inset-1.5 hover:bg-black/75 hover:text-white"
       >
         {children}
       </button>
@@ -117,7 +117,7 @@ function Finished({ gen, compact }: { gen: Generation; compact: boolean }) {
 
       {!compact && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-3 pt-10 opacity-0 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100">
-          <p className="line-clamp-2 text-sm text-white/95">{gen.prompt || 'No prompt'}</p>
+          <p dir="auto" className="line-clamp-2 text-sm text-white/95 [overflow-wrap:anywhere]">{gen.prompt || 'No prompt'}</p>
           <p className="mt-1 text-xs text-white/65">
             {gen.modelName}
             {gen.variantLabel ? ` · ${gen.variantLabel}` : ''}
@@ -176,7 +176,7 @@ function InProgress({ gen, compact }: { gen: Generation; compact: boolean }) {
           </div>
         )}
         <div className="flex flex-col gap-2">
-          {!compact && <p className="line-clamp-2 text-xs text-fg-muted">{gen.prompt}</p>}
+          {!compact && <p dir="auto" className="line-clamp-2 text-xs text-fg-muted [overflow-wrap:anywhere]">{gen.prompt}</p>}
           {compact && !indeterminate && <span className="font-mono text-sm text-fg tabular-nums">{pct}%</span>}
           <div className="relative h-0.5 overflow-hidden rounded-full bg-surface-3" role="progressbar" aria-label={`${label} ${gen.modelName}`} aria-valuenow={indeterminate ? undefined : pct} aria-valuemin={0} aria-valuemax={100}>
             {indeterminate ? (
@@ -208,7 +208,7 @@ function Failed({ gen, compact }: { gen: Generation; compact: boolean }) {
       <p className={cn('mt-1.5 min-h-0 overflow-hidden text-xs text-fg-muted', compact ? 'line-clamp-2' : 'line-clamp-3')}>
         {gen.error || 'Generation failed.'}
       </p>
-      {!compact && <p className="mt-auto line-clamp-1 shrink-0 pt-2 text-xs text-fg-subtle">{gen.modelName} · {gen.prompt}</p>}
+      {!compact && <p dir="auto" className="mt-auto line-clamp-1 shrink-0 pt-2 text-xs text-fg-subtle [overflow-wrap:anywhere]">{gen.modelName} · {gen.prompt}</p>}
       <div className={cn('relative z-10 flex shrink-0 gap-1.5', compact ? 'mt-auto' : 'mt-2')}>
         <button
           type="button"
@@ -317,7 +317,7 @@ export const GenerationCard = memo(function GenerationCard({
           open(gen.id);
         }}
         aria-pressed={selecting ? selected : undefined}
-        aria-label={`${selecting ? (selected ? 'Deselect' : 'Select') : 'Open'} ${failed ? 'failed ' : finished ? '' : 'pending '}${kind}: ${gen.prompt || gen.modelName}`}
+        aria-label={`${selecting ? (selected ? 'Deselect' : 'Select') : 'Open'} ${failed ? 'failed ' : finished ? '' : 'pending '}${kind}${unseen && finished ? ' (new result)' : ''}: ${gen.prompt || gen.modelName}`}
         className="absolute inset-0 z-0 rounded-md focus-visible:outline-offset-[-2px]"
       />
       <motion.div
@@ -345,7 +345,7 @@ export const GenerationCard = memo(function GenerationCard({
         </span>
       )}
       {unseen && finished && !selected && (
-        <span aria-label="New result" className="absolute top-2 left-2 size-2.5 rounded-full bg-accent ring-2 ring-black/40" />
+        <span aria-hidden="true" className="absolute top-2 left-2 size-2.5 rounded-full bg-accent ring-2 ring-black/40" />
       )}
     </motion.div>
   );

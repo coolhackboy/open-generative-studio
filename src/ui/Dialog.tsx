@@ -113,7 +113,7 @@ export function Dialog({
             transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.8 }}
             className={cn(
               'relative flex w-full flex-col overflow-hidden border border-line-strong bg-surface shadow-lg outline-none',
-              mobile === 'full' ? 'h-dvh sm:h-auto' : 'max-h-[92dvh] rounded-t-lg',
+              mobile === 'full' ? cn('h-dvh', size !== 'full' && !className?.includes('sm:h-') && 'sm:h-auto') : 'max-h-[92dvh] rounded-t-lg',
               'sm:max-h-[calc(100dvh-48px)] sm:rounded-lg',
               sizes[size],
               className,
