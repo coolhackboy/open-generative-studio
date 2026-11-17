@@ -6,6 +6,7 @@ import { loadCatalog } from './data/catalog';
 import '@fontsource-variable/geist/wght.css';
 import '@fontsource-variable/geist-mono/wght.css';
 import './index.css';
+import { initAttention } from './lib/attention';
 import { initComposer } from './lib/store';
 import { initTheme } from './ui';
 
@@ -43,6 +44,7 @@ const root = createRoot(document.getElementById('root')!);
 loadCatalog()
   .then(() => {
     initComposer();
+    initAttention();
     root.render(
       <StrictMode>
         <App />

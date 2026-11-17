@@ -1,4 +1,4 @@
-import { findVariant, getModel, getVariant } from '../data/catalog';
+import { findVariant, getModel, getVariant, models } from '../data/catalog';
 import { toast } from '../ui/toast';
 import { api, ApiError, MOCK_MODE } from './api';
 import { estimateCost } from './cost';
@@ -241,6 +241,75 @@ export function reuse(gen: Generation): void {
   useComposer
     .getState()
     .applyPreset({ modelId: found?.model.id ?? gen.modelId, variant: gen.variant, input: gen.input });
+}
+
+// ---------------------------------------------------------------- follow-up actions
+
+interface Target {
+  modelId: string;
+  variant: string;
+  field: string;
+}
+
+/** Find a model/variant with an image input, preferring the current model, then a short list. */
+function findImageTarget(category: 'video' | 'image', prefer: string[], wantEdit: boolean): Target | undefined {
+  const c = useComposer.getState();
+  const current = getModel(c.modelId);
+  const candidates = [
+    ...(current && current.category === category ? [current] : []),
+    ...prefer.map((id) => getModel(id)).filter((m): m is NonNullable<typeof m> => !!m),
+    ...models.filter((m) => m.category === category && m.featured),
+    ...models.filter((m) => m.category === category),
+  ];
+  for (const m of candidates) {
+    const variants = [...m.variants].sort((a, b) => {
+      const score = (v: typeof a) =>
+        (wantEdit ? /edit/i.test(`${v.model} ${v.label}`) : /image.to.video|i2v|first/i.test(`${v.model} ${v.label}`)) ? 0 : 1;
+      return score(a) - score(b);
+    });
+    for (const v of variants) {
+      const field = getMediaFields(v, m.category).find((f) => f.kind === 'image' && !/mask|last|end/i.test(f.name));
+      if (field) return { modelId: m.id, variant: v.model, field: field.name };
+    }
+  }
+  return undefined;
+}
+
+function loadTarget(t: Target, url: string, prompt: string): void {
+  const c = useComposer.getState();
+  c.applyPreset({ modelId: t.modelId, variant: t.variant, input: { prompt } });
+  addRemoteReference(url, 'image', t.field);
+  requestAnimationFrame(() => document.getElementById('prompt-input')?.focus());
+}
+
+/** Image → video: open an image-to-video model with this image as the first frame. */
+export function animateImage(url: string, prompt: string): void {
+  const t = findImageTarget('video', ['seedance-2-5-flash', 'kling-4-0', 'veo-3-1'], false);
+  if (!t) return void toast.show({ title: 'No video model accepts an image', tone: 'danger' });
+  loadTarget(t, url, prompt ? `Bring this to life: ${prompt}` : '');
+  toast.success(`Loaded into ${getModel(t.modelId)?.name ?? 'a video model'}`, 'Describe the motion, then generate.');
+}
+
+/** Open an image-edit model with this image attached. */
+export function editImage(url: string): void {
+  const t = findImageTarget('image', ['nano-banana-2-1', 'flux-3-klein', 'gpt-image-2-6', 'seedream-5-5'], true);
+  if (!t) return void toast.show({ title: 'No edit model available', tone: 'danger' });
+  loadTarget(t, url, '');
+  toast.success(`Loaded into ${getModel(t.modelId)?.name ?? 'an edit model'}`, 'Describe the change you want.');
+}
+
+/** Attach an output to the current model's matching reference input (switching models if needed). */
+export function attachAsReference(url: string, kind: MediaKind): void {
+  if (addRemoteReference(url, kind)) {
+    toast.success('Added as a reference');
+    requestAnimationFrame(() => document.getElementById('prompt-input')?.focus());
+    return;
+  }
+  if (kind !== 'image') return void toast.show({ title: `The current model doesn't accept ${kind} references`, tone: 'info' });
+  const t = findImageTarget(useComposer.getState().modelId ? (getModel(useComposer.getState().modelId)?.category ?? 'image') : 'image', [], false);
+  if (!t) return void toast.show({ title: 'No model accepts this reference', tone: 'info' });
+  loadTarget(t, url, useComposer.getState().prompt);
+  toast.success(`Switched to ${getModel(t.modelId)?.name} to use this reference`);
 }
 
 /** Dev mock mode only: fill the gallery with demo generations in every state. */

@@ -55,7 +55,13 @@ interface GalleryState {
   upsert: (gen: Generation) => void;
   patch: (id: string, patch: Partial<Generation>) => void;
   remove: (id: string) => void;
+  removeMany: (ids: string[]) => void;
   clearAll: () => Promise<void>;
+  /** Multi-select (shift/cmd-click). */
+  selected: string[];
+  anchor: string | null;
+  toggleSelect: (id: string, range?: boolean, visible?: string[]) => void;
+  clearSelection: () => void;
 }
 
 const sortNewest = (a: Generation, b: Generation) => b.createdAt - a.createdAt;
@@ -87,9 +93,36 @@ export const useGallery = create<GalleryState>((setState, getState) => ({
     void db.put(updated);
   },
   remove: (id) => {
-    setState({ items: getState().items.filter((g) => g.id !== id) });
+    setState({
+      items: getState().items.filter((g) => g.id !== id),
+      selected: getState().selected.filter((x) => x !== id),
+    });
     void db.remove(id);
   },
+  removeMany: (ids) => {
+    const drop = new Set(ids);
+    setState({ items: getState().items.filter((g) => !drop.has(g.id)), selected: [], anchor: null });
+    ids.forEach((id) => void db.remove(id));
+  },
+  selected: [],
+  anchor: null,
+  toggleSelect: (id, range, visible) => {
+    const { selected, anchor } = getState();
+    if (range && anchor && visible) {
+      const a = visible.indexOf(anchor);
+      const b = visible.indexOf(id);
+      if (a !== -1 && b !== -1) {
+        const span = visible.slice(Math.min(a, b), Math.max(a, b) + 1);
+        setState({ selected: [...new Set([...selected, ...span])] });
+        return;
+      }
+    }
+    setState({
+      selected: selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id],
+      anchor: id,
+    });
+  },
+  clearSelection: () => setState({ selected: [], anchor: null }),
   clearAll: async () => {
     setState({ items: [] });
     await db.clear();

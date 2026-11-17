@@ -1,5 +1,5 @@
 import { ImageOff } from 'lucide-react';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { MOCK_MODE } from '../lib/api';
 import { estimateAspect } from '../lib/schema';
 import { useGallery, useSettings, type GalleryFilter } from '../lib/store';
@@ -13,7 +13,6 @@ const getKey = (g: Generation) => g.id;
 const getAspect = (g: Generation) =>
   // Failed cards hold only text: keep them compact regardless of the requested ratio.
   g.status === 'failed' ? Math.max(3 / 2, g.aspect ?? 0) : (g.aspect ?? estimateAspect(g.category, g.input));
-const renderCard = (g: Generation) => <GenerationCard gen={g} />;
 
 export function Gallery() {
   const items = useGallery((s) => s.items);
@@ -25,6 +24,11 @@ export function Gallery() {
   const visible = useMemo(
     () => (filter === 'all' ? items : items.filter((g) => g.category === filter)),
     [items, filter],
+  );
+  const visibleIds = useMemo(() => visible.map((g) => g.id), [visible]);
+  const renderCard = useCallback(
+    (g: Generation, size: { width: number; height: number }) => <GenerationCard gen={g} size={size} visibleIds={visibleIds} />,
+    [visibleIds],
   );
   const counts = useMemo(
     () => ({
