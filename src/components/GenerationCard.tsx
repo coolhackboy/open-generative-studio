@@ -100,7 +100,7 @@ function Finished({ gen, compact }: { gen: Generation; compact: boolean }) {
       )}
       {!loaded && <div className="shimmer pointer-events-none absolute inset-0" />}
 
-      <div className="pointer-events-none absolute top-0 left-0 flex gap-1 p-2">
+      <div className="pointer-events-none absolute top-0 left-0 flex gap-1 p-2 in-data-selecting:pl-10">
         {isVideo && (
           <span className="inline-flex items-center gap-1 rounded-xs bg-black/50 px-1.5 py-0.5 font-mono text-xs text-white/90 backdrop-blur-md">
             <Film size={11} />
@@ -154,7 +154,7 @@ function InProgress({ gen, compact }: { gen: Generation; compact: boolean }) {
       <div className="shimmer absolute inset-0" />
       <div aria-hidden="true" className="glow absolute inset-0 opacity-70" />
       <div className={cn('relative flex h-full flex-col justify-between', compact ? 'p-2' : 'p-3')}>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 in-data-selecting:pl-8">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2/80 px-2 py-0.5 text-xs font-medium text-fg-muted">
             <Spinner size={11} className="text-accent-ink" />
             {label}
@@ -201,7 +201,7 @@ function Failed({ gen, compact }: { gen: Generation; compact: boolean }) {
   const [busy, setBusy] = useState(false);
   return (
     <div className={cn('absolute inset-0 flex flex-col bg-surface', compact ? 'p-2' : 'p-3')}>
-      <div className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-danger">
+      <div className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-danger in-data-selecting:pl-8">
         <CircleAlert size={14} />
         {gen.notSent ? (compact ? 'Not sent' : 'Not sent — nothing billed') : 'Failed'}
       </div>
@@ -289,6 +289,7 @@ export const GenerationCard = memo(function GenerationCard({
         selected && 'ring-2 ring-accent',
         celebrate && 'animate-ring',
       )}
+      data-selecting={selecting || undefined}
       onPointerMove={(e) => {
         if (!isVideo || e.pointerType !== 'mouse') return;
         const v = e.currentTarget.querySelector('video');

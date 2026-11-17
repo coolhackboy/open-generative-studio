@@ -125,7 +125,8 @@ export function demoGenerations(apiBase: string): Generation[] {
   ): Generation | null => {
     const found = findVariant(variant);
     if (!found) return null;
-    const createdAt = now - i * 7 * 60_000;
+    // Spread across days so the gallery shows Today / Yesterday / date groups.
+    const createdAt = now - (i < 4 ? i * 7 * 60_000 : i < 8 ? 86_400_000 + i * 11 * 60_000 : (i - 5) * 86_400_000);
     return {
       id: `demo-${i}`,
       taskId: `mock_demo_${i}`,
