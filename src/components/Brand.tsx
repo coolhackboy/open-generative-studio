@@ -6,19 +6,23 @@ import { cn } from '../ui';
 export function Logo({ className }: { className?: string }) {
   if (config.brandLogoUrl)
     return <img src={config.brandLogoUrl} alt="" className={cn('size-7 rounded-sm object-contain', className)} />;
+  // "Aperture spark": a segmented lens ring around a four-point spark.
   return (
     <svg viewBox="0 0 32 32" className={cn('size-7', className)} aria-hidden="true">
       <rect width="32" height="32" rx="8" className="fill-surface-2" />
       <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" fill="none" className="stroke-line-strong" />
-      <path
-        d="M9 21.5 14.2 10.5h3.6L23 21.5"
+      <circle
+        cx="16"
+        cy="16"
+        r="10.25"
         fill="none"
         className="stroke-fg"
-        strokeWidth="2.2"
+        strokeWidth="1.6"
         strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeDasharray="11.6 4.5"
+        transform="rotate(-62 16 16)"
       />
-      <circle cx="16" cy="19.2" r="2.6" className="fill-accent" />
+      <path d="M16 8.6c.7 4.4 2.9 6.6 7.4 7.4-4.5.8-6.7 3-7.4 7.4-.8-4.4-3-6.6-7.4-7.4 4.4-.8 6.6-3 7.4-7.4Z" className="fill-accent" />
     </svg>
   );
 }

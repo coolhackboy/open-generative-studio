@@ -1,23 +1,31 @@
-import { Monitor, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { cn } from './cn';
-import { useTheme, type ThemePref } from './theme';
+import { resolvedTheme, useTheme } from './theme';
 import { Tooltip } from './Tooltip';
 
-const ORDER: ThemePref[] = ['system', 'dark', 'light'];
-const LABEL: Record<ThemePref, string> = { system: 'System theme', dark: 'Dark theme', light: 'Light theme' };
-
-/** Icon button cycling system → dark → light. */
+/** Two-state toggle: flips between dark and light (starting from the system theme). */
 export function ThemeToggle({ className }: { className?: string }) {
   const pref = useTheme((s) => s.pref);
   const setPref = useTheme((s) => s.setPref);
-  const next = ORDER[(ORDER.indexOf(pref) + 1) % ORDER.length];
-  const Icon = pref === 'system' ? Monitor : pref === 'dark' ? Moon : Sun;
+  const [current, setCurrent] = useState(() => resolvedTheme(pref));
+
+  useEffect(() => {
+    setCurrent(resolvedTheme(pref));
+    const mq = window.matchMedia?.('(prefers-color-scheme: light)');
+    const onChange = () => setCurrent(resolvedTheme(useTheme.getState().pref));
+    mq?.addEventListener?.('change', onChange);
+    return () => mq?.removeEventListener?.('change', onChange);
+  }, [pref]);
+
+  const next = current === 'dark' ? 'light' : 'dark';
+  const Icon = current === 'dark' ? Moon : Sun;
   return (
-    <Tooltip label={`${LABEL[pref]} · switch to ${next}`}>
+    <Tooltip label={`Switch to ${next} theme`}>
       <button
         type="button"
         onClick={() => setPref(next)}
-        aria-label={`${LABEL[pref]}. Switch to ${next}`}
+        aria-label={`Switch to ${next} theme`}
         className={cn(
           'inline-flex size-9 items-center justify-center rounded-sm text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg',
           className,

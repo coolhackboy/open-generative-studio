@@ -5,6 +5,7 @@ import { Gallery } from './components/Gallery';
 import { Lightbox } from './components/Lightbox';
 import { ModelPalette } from './components/ModelPalette';
 import { SettingsDialog } from './components/SettingsDialog';
+import { ShortcutsDialog } from './components/ShortcutsDialog';
 import { TopBar } from './components/TopBar';
 import { MOCK_MODE } from './lib/api';
 import { focusPrompt, useGallery, useUI } from './lib/store';
@@ -30,6 +31,11 @@ function useGlobalHotkeys() {
         if (hasOpenLayer() || ui.lightboxId) return;
         e.preventDefault();
         void generate();
+        return;
+      }
+      if (e.key === '?' && !mod && !isTyping(e.target) && !hasOpenLayer()) {
+        e.preventDefault();
+        ui.setShortcutsOpen(true);
         return;
       }
       if (e.key === '/' && !mod && !isTyping(e.target) && !hasOpenLayer()) {
@@ -64,6 +70,7 @@ export default function App() {
       <Composer />
       <ModelPalette />
       <SettingsDialog />
+      <ShortcutsDialog />
       <Lightbox />
       <Toaster />
     </MotionConfig>

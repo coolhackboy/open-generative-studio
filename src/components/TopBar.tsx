@@ -1,4 +1,4 @@
-import { FlaskConical, Settings } from 'lucide-react';
+import { FlaskConical, Keyboard, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { config } from '../config';
 import { MOCK_MODE } from '../lib/api';
@@ -10,6 +10,7 @@ export function TopBar() {
   const [scrolled, setScrolled] = useState(false);
   const hasKey = useSettings((s) => Boolean(s.apiKey));
   const openSettings = useUI((s) => s.setSettingsOpen);
+  const openShortcuts = useUI((s) => s.setShortcutsOpen);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
@@ -59,6 +60,16 @@ export function TopBar() {
           </a>
         )}
         <GitHubStar />
+        <Tooltip label="Keyboard shortcuts (?)">
+          <button
+            type="button"
+            onClick={() => openShortcuts(true)}
+            aria-label="Keyboard shortcuts"
+            className="hidden size-9 items-center justify-center rounded-sm text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg md:inline-flex"
+          >
+            <Keyboard size={17} strokeWidth={1.75} />
+          </button>
+        </Tooltip>
         <ThemeToggle />
         <Tooltip label="Settings">
           <button

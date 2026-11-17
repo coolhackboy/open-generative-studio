@@ -365,6 +365,8 @@ interface UIState {
   paletteOpen: boolean;
   settingsOpen: boolean;
   lightboxId: string | null;
+  shortcutsOpen: boolean;
+  setShortcutsOpen: (v: boolean) => void;
   setPaletteOpen: (v: boolean) => void;
   setSettingsOpen: (v: boolean) => void;
   openLightbox: (id: string | null) => void;
@@ -374,6 +376,8 @@ export const useUI = create<UIState>((setState) => ({
   paletteOpen: false,
   settingsOpen: false,
   lightboxId: null,
+  shortcutsOpen: false,
+  setShortcutsOpen: (shortcutsOpen) => setState({ shortcutsOpen }),
   setPaletteOpen: (paletteOpen) => setState({ paletteOpen }),
   setSettingsOpen: (settingsOpen) => setState({ settingsOpen }),
   openLightbox: (lightboxId) => setState({ lightboxId }),
