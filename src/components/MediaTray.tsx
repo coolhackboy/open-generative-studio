@@ -84,7 +84,7 @@ export function MediaTray({ fields }: { fields: MediaField[] }) {
     <div className="no-scrollbar flex gap-4 overflow-x-auto px-3 pt-3 pb-1">
       {groups.map(({ field, items }) => (
         <div key={field.name} className="flex shrink-0 flex-col gap-1.5">
-          <span className="text-2xs font-medium text-fg-subtle">
+          <span className="text-xs font-medium text-fg-subtle">
             {field.label}{' '}
             <span className="font-mono">
               {items.length}/{field.max}
@@ -152,7 +152,7 @@ export function AttachButton({ fields }: { fields: MediaField[] }) {
         }}
       />
       <Popover open={menu} onClose={() => setMenu(false)} anchorRef={anchorRef} label="Add reference" className="w-[300px] p-1.5">
-        <div className="px-2 pt-1 pb-2 text-2xs font-medium tracking-wide text-fg-subtle uppercase">Add reference</div>
+        <div className="px-2 pt-1 pb-2 text-xs font-medium tracking-[0.02em] text-fg-subtle ">Add reference</div>
         <div className="flex flex-col">
           {fields.map((f) => {
             const Icon = KIND_ICON[f.kind];
@@ -173,14 +173,14 @@ export function AttachButton({ fields }: { fields: MediaField[] }) {
                   <span className="flex items-center gap-2 text-[13px] text-fg">
                     {f.label}
                     {f.required && (
-                      <span className="rounded-xs bg-accent-soft px-1 text-2xs font-medium text-accent">Required</span>
+                      <span className="rounded-xs bg-accent-soft px-1 text-xs font-medium text-accent-ink">Required</span>
                     )}
-                    <span className="ml-auto font-mono text-2xs text-fg-subtle">
+                    <span className="ml-auto font-mono text-xs text-fg-subtle">
                       {count}/{f.max}
                     </span>
                   </span>
                   {f.description && (
-                    <span className="mt-0.5 line-clamp-2 block text-2xs leading-4 text-fg-subtle">{f.description}</span>
+                    <span className="mt-0.5 line-clamp-2 block text-xs leading-4 text-fg-subtle">{f.description}</span>
                   )}
                 </span>
               </button>

@@ -48,7 +48,7 @@ function Media({ gen, index }: { gen: Generation; index: number }) {
   if (!file) {
     return (
       <div className="flex flex-col items-center gap-3 text-fg-muted">
-        <Spinner size={22} className="text-accent" />
+        <Spinner size={22} className="text-accent-ink" />
         <p className="font-mono text-sm tabular-nums">
           {gen.status === 'running' && gen.progress > 0 ? `${Math.round(gen.progress)}%` : 'Queued'}
         </p>
@@ -88,7 +88,7 @@ function Section({ title, children, action }: { title: string; children: React.R
   return (
     <section className="border-t border-line px-5 py-4">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-2xs font-medium tracking-wide text-fg-subtle uppercase">{title}</h3>
+        <h3 className="text-xs font-medium tracking-[0.02em] text-fg-subtle ">{title}</h3>
         {action}
       </div>
       {children}
@@ -274,7 +274,7 @@ export function Lightbox() {
                   <button
                     type="button"
                     onClick={() => void copyText(gen.prompt, 'Prompt copied')}
-                    className="inline-flex items-center gap-1 rounded-xs text-2xs text-fg-muted hover:text-fg"
+                    className="inline-flex items-center gap-1 rounded-xs text-xs text-fg-muted hover:text-fg"
                   >
                     <Copy size={12} /> Copy
                   </button>
@@ -289,7 +289,7 @@ export function Lightbox() {
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5">
                   {params.map(([k, v]) => (
                     <div key={k} className="min-w-0">
-                      <dt className="text-2xs text-fg-subtle">{humanize(k)}</dt>
+                      <dt className="text-xs text-fg-subtle">{humanize(k)}</dt>
                       <dd className="truncate font-mono text-xs text-fg" title={formatValue(v, k)}>
                         {formatValue(v, k)}
                       </dd>
@@ -339,7 +339,7 @@ export function Lightbox() {
                   )}
                 </span>
                 {gen.taskId && (
-                  <span className="truncate font-mono text-2xs text-fg-subtle" title="Task ID">
+                  <span className="truncate font-mono text-xs text-fg-subtle" title="Task ID">
                     {gen.taskId}
                   </span>
                 )}
@@ -353,7 +353,7 @@ export function Lightbox() {
                   href={found.variant.docUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-2 inline-flex items-center gap-1 text-2xs text-fg-muted hover:text-fg"
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-fg-muted hover:text-fg"
                 >
                   API reference for {gen.variant} <ArrowUpRight size={11} />
                 </a>
@@ -361,7 +361,7 @@ export function Lightbox() {
             </Section>
 
             <div className="mt-auto flex items-center justify-between gap-2 border-t border-line px-5 py-3">
-              <span className="text-2xs text-fg-subtle">
+              <span className="text-xs text-fg-subtle">
                 {pos >= 0 ? `${pos + 1} of ${list.length}` : ''} {pos >= 0 && '· ← → to browse'}
               </span>
               <Button

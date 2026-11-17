@@ -40,7 +40,7 @@ export function Slider({
         style={{ '--fill': `${pct}%` } as CSSProperties}
         onChange={(e) => onChange(Number(e.target.value))}
       />
-      <div className="flex justify-between font-mono text-2xs text-fg-subtle tabular-nums">
+      <div className="flex justify-between font-mono text-xs text-fg-subtle tabular-nums">
         <span>{fmt(min)}</span>
         <span>{fmt(max)}</span>
       </div>

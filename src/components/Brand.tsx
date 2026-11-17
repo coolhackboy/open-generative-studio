@@ -52,14 +52,18 @@ export function GitHubStar({ className }: { className?: string }) {
     } catch {
       /* ignore */
     }
+    // Read the owner's public repo list (always 200) instead of /repos/{name}, which 404s
+    // before the repository exists and would log a console error.
+    const [owner, repo] = match[1].split('/');
     const ctrl = new AbortController();
-    fetch(`https://api.github.com/repos/${match[1]}`, { signal: ctrl.signal })
+    fetch(`https://api.github.com/users/${owner}/repos?per_page=100&sort=updated`, { signal: ctrl.signal })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { stargazers_count?: number } | null) => {
-        if (typeof d?.stargazers_count !== 'number') return;
-        setStars(d.stargazers_count);
+      .then((list: { name?: string; stargazers_count?: number }[] | null) => {
+        const found = Array.isArray(list) ? list.find((r) => r.name?.toLowerCase() === repo.toLowerCase()) : undefined;
+        if (typeof found?.stargazers_count !== 'number') return;
+        setStars(found.stargazers_count);
         try {
-          sessionStorage.setItem(cacheKey, String(d.stargazers_count));
+          sessionStorage.setItem(cacheKey, String(found.stargazers_count));
         } catch {
           /* ignore */
         }

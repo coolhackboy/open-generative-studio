@@ -12,6 +12,7 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     min-height: 100dvh;
+    overflow-x: hidden;
   }
 
   ::selection {
@@ -32,17 +33,30 @@
   button:disabled {
     cursor: not-allowed;
   }
+
+  a {
+    text-underline-offset: 3px;
+  }
 }
 
 @layer components {
-  .hairline {
-    border: 1px solid var(--line);
-  }
-
   .glass {
     background: var(--glass);
     backdrop-filter: saturate(1.6) blur(20px);
     -webkit-backdrop-filter: saturate(1.6) blur(20px);
+  }
+
+  .glow {
+    background-image: var(--glow);
+  }
+
+  /* 12px label with a touch of tracking (replaces tiny uppercase labels) */
+  .label {
+    font-size: var(--text-xs);
+    line-height: var(--text-xs--line-height);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--fg-subtle);
   }
 
   .shimmer {
@@ -73,7 +87,7 @@
   .ui-range {
     -webkit-appearance: none;
     appearance: none;
-    height: 20px;
+    height: 24px;
     background: transparent;
     width: 100%;
   }
@@ -98,17 +112,17 @@
   }
   .ui-range::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    margin-top: -6px;
+    width: 18px;
+    height: 18px;
+    margin-top: -7px;
     border-radius: 999px;
     background: var(--fg);
     border: 3px solid var(--surface);
     box-shadow: 0 0 0 1px var(--line-strong);
   }
   .ui-range::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 999px;
     background: var(--fg);
     border: 3px solid var(--surface);
@@ -117,11 +131,64 @@
     outline: none;
   }
   .ui-range:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 3px var(--ring);
+    box-shadow: 0 0 0 4px var(--ring);
+  }
+
+  /* Lightweight syntax highlighting for code snippets */
+  .code-token-string {
+    color: #a5d6a7;
+  }
+  .code-token-key {
+    color: #93c5fd;
+  }
+  .code-token-number {
+    color: #fcd34d;
+  }
+  .code-token-keyword {
+    color: #c4b5fd;
+  }
+  .code-token-comment {
+    color: var(--fg-subtle);
+    font-style: italic;
+  }
+  :root[data-theme='light'] .code-token-string {
+    color: #166534;
+  }
+  :root[data-theme='light'] .code-token-key {
+    color: #1d4ed8;
+  }
+  :root[data-theme='light'] .code-token-number {
+    color: #a16207;
+  }
+  :root[data-theme='light'] .code-token-keyword {
+    color: #6d28d9;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme='dark']) .code-token-string {
+      color: #166534;
+    }
+    :root:not([data-theme='dark']) .code-token-key {
+      color: #1d4ed8;
+    }
+    :root:not([data-theme='dark']) .code-token-number {
+      color: #a16207;
+    }
+    :root:not([data-theme='dark']) .code-token-keyword {
+      color: #6d28d9;
+    }
   }
 }
 
+/* Respect reduced motion everywhere — CSS transitions/animations included, not just motion/react. */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
   .shimmer {
     animation: none;
   }

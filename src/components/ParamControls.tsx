@@ -1,6 +1,6 @@
 import { SlidersHorizontal, X } from 'lucide-react';
 import { useRef, useState, type ReactNode } from 'react';
-import { formatParamValue, parseAspect, type ParamField, type Params } from '../lib/schema';
+import { formatOption, formatParamValue, parseAspect, type ParamField, type Params } from '../lib/schema';
 import { Chip, Input, Popover, Segmented, Slider, Toggle } from '../ui';
 
 type Value = string | number | boolean | undefined;
@@ -41,7 +41,7 @@ export function FieldEditor({
         label: (
           <>
             {aspect && <AspectGlyph value={o} />}
-            {field.name === 'duration' && typeof o === 'number' ? `${o}s` : String(o)}
+            {formatOption(field, o)}
           </>
         ),
       }));
@@ -178,7 +178,7 @@ export function ParamChip({
           }}
         />
         {field.description && (
-          <p className="mt-2.5 line-clamp-3 max-w-[300px] text-2xs leading-4 text-fg-subtle">{field.description}</p>
+          <p className="mt-2.5 line-clamp-3 max-w-[300px] text-xs leading-4 text-fg-subtle">{field.description}</p>
         )}
       </Popover>
     </>
@@ -211,7 +211,7 @@ export function MoreParams({
         onClick={() => setOpen((o) => !o)}
       >
         {changed > 0 && (
-          <span className="inline-flex size-4 items-center justify-center rounded-full bg-accent-soft font-mono text-2xs text-accent">
+          <span className="inline-flex size-4 items-center justify-center rounded-full bg-accent-soft font-mono text-xs text-accent-ink">
             {changed}
           </span>
         )}
@@ -234,7 +234,7 @@ export function MoreParams({
               <div key={f.name} className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <div className="text-[13px] text-fg">{f.label}</div>
-                  {f.description && <div className="mt-0.5 line-clamp-2 text-2xs leading-4 text-fg-subtle">{f.description}</div>}
+                  {f.description && <div className="mt-0.5 line-clamp-2 text-xs leading-4 text-fg-subtle">{f.description}</div>}
                 </div>
                 <FieldEditor field={f} value={params[f.name]} onChange={(v) => onChange(f.name, v)} />
               </div>
@@ -243,7 +243,7 @@ export function MoreParams({
                 {f.control.kind !== 'range' && <div className="text-[13px] text-fg">{f.label}</div>}
                 <FieldEditor field={f} value={params[f.name]} onChange={(v) => onChange(f.name, v)} compact />
                 {f.description && f.control.kind !== 'range' && (
-                  <div className="line-clamp-2 text-2xs leading-4 text-fg-subtle">{f.description}</div>
+                  <div className="line-clamp-2 text-xs leading-4 text-fg-subtle">{f.description}</div>
                 )}
               </div>
             ),

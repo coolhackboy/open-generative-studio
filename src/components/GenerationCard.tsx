@@ -86,13 +86,13 @@ function Finished({ gen }: { gen: Generation }) {
 
       <div className="pointer-events-none absolute top-0 left-0 flex gap-1 p-2">
         {isVideo && (
-          <span className="inline-flex items-center gap-1 rounded-xs bg-black/45 px-1.5 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-md">
+          <span className="inline-flex items-center gap-1 rounded-xs bg-black/45 px-1.5 py-0.5 font-mono text-xs text-white/90 backdrop-blur-md">
             <Film size={11} />
             {duration ? formatDuration(duration * 1000) : 'Video'}
           </span>
         )}
         {gen.files.length > 1 && (
-          <span className="inline-flex items-center gap-1 rounded-xs bg-black/45 px-1.5 py-0.5 font-mono text-2xs text-white/90 backdrop-blur-md">
+          <span className="inline-flex items-center gap-1 rounded-xs bg-black/45 px-1.5 py-0.5 font-mono text-xs text-white/90 backdrop-blur-md">
             <Layers size={11} />
             {gen.files.length}
           </span>
@@ -101,7 +101,7 @@ function Finished({ gen }: { gen: Generation }) {
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-3 pt-10 opacity-0 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100">
         <p className="line-clamp-2 text-[13px] leading-[18px] text-white/95">{gen.prompt || 'No prompt'}</p>
-        <p className="mt-1 text-2xs text-white/60">
+        <p className="mt-1 text-xs text-white/60">
           {gen.modelName}
           {gen.variantLabel ? ` · ${gen.variantLabel}` : ''}
         </p>
@@ -135,11 +135,11 @@ function InProgress({ gen }: { gen: Generation }) {
       />
       <div className="relative flex h-full flex-col justify-between p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2/80 px-2 py-0.5 text-2xs font-medium text-fg-muted">
-            <Spinner size={11} className="text-accent" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2/80 px-2 py-0.5 text-xs font-medium text-fg-muted">
+            <Spinner size={11} className="text-accent-ink" />
             {label}
           </span>
-          <span className="font-mono text-2xs text-fg-subtle tabular-nums">{formatDuration(now - gen.createdAt)}</span>
+          <span className="font-mono text-xs text-fg-subtle tabular-nums">{formatDuration(now - gen.createdAt)}</span>
         </div>
         <div className="flex flex-col items-center gap-1">
           {!queued && pct > 0 ? (
@@ -177,7 +177,7 @@ function Failed({ gen }: { gen: Generation }) {
         {gen.notSent ? 'Not sent — nothing billed' : 'Failed'}
       </div>
       <p className="mt-2 line-clamp-4 min-h-0 overflow-hidden text-xs leading-[17px] text-fg-muted">{gen.error || 'Generation failed.'}</p>
-      <p className="mt-auto line-clamp-1 shrink-0 pt-2 text-2xs leading-4 text-fg-subtle">
+      <p className="mt-auto line-clamp-1 shrink-0 pt-2 text-xs leading-4 text-fg-subtle">
         {gen.modelName} · {gen.prompt}
       </p>
       <div className="relative z-10 mt-2 flex shrink-0 gap-1.5">

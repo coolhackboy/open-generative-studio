@@ -60,15 +60,15 @@ export function StartHere() {
               />
               <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/0" />
               <span className="absolute inset-x-0 top-0 flex items-center gap-1.5 p-2.5">
-                <span className="inline-flex items-center gap-1 rounded-xs bg-black/45 px-1.5 py-0.5 text-2xs font-medium text-white/90 backdrop-blur-md">
+                <span className="inline-flex items-center gap-1 rounded-xs bg-black/45 px-1.5 py-0.5 text-xs font-medium text-white/90 backdrop-blur-md">
                   <Icon size={11} />
                   {p.model.name}
                 </span>
               </span>
               <span className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-3">
-                <span className="text-2xs font-medium tracking-wide text-white/55 uppercase">Example prompt</span>
+                <span className="text-xs font-medium tracking-wide text-white/55 ">Example prompt</span>
                 <span className="line-clamp-3 text-[13px] leading-[18px] text-white/90">{p.prompt}</span>
-                <span className="inline-flex items-center gap-1 text-2xs font-medium text-white/60 transition-colors group-hover:text-white">
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-white/60 transition-colors group-hover:text-white">
                   Try it
                   <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
                 </span>

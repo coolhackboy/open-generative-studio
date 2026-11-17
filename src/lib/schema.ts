@@ -232,12 +232,41 @@ function isValidValue(field: ParamField, value: unknown): boolean {
   }
 }
 
+const OPTION_LABELS: Record<string, string> = {
+  auto: 'Auto',
+  png: 'PNG',
+  jpeg: 'JPEG',
+  jpg: 'JPG',
+  webp: 'WebP',
+  gif: 'GIF',
+  mp4: 'MP4',
+  mp3: 'MP3',
+  wav: 'WAV',
+  true: 'On',
+  false: 'Off',
+  none: 'None',
+  standard: 'Standard',
+  pro: 'Pro',
+  hd: 'HD',
+  sd: 'SD',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+};
+
+/** Human label for an enum option ("png" → "PNG", "auto" → "Auto", "720p" stays). */
+export function formatOption(field: Pick<ParamField, 'name'>, value: unknown): string {
+  if (field.name === 'duration' && typeof value === 'number') return `${value}s`;
+  const s = String(value);
+  return OPTION_LABELS[s.toLowerCase()] ?? s;
+}
+
 export function formatParamValue(field: ParamField, value: unknown): string {
   if (value === undefined || value === null || value === '') return 'Auto';
   if (typeof value === 'boolean') return value ? 'On' : 'Off';
   if (field.name === 'duration' && typeof value === 'number') return `${value}s`;
   if ((field.name === 'n' || field.name === 'num_images') && typeof value === 'number') return `×${value}`;
-  return String(value);
+  return formatOption(field, value);
 }
 
 export interface BuildArgs {

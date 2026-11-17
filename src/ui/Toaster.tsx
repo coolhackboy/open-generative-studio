@@ -1,12 +1,31 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { CircleAlert, CircleCheck, Info, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from './cn';
-import { useToasts, type ToastTone } from './toast';
+import { useToasts, type ToastItem, type ToastTone } from './toast';
+
+/** Dismisses after `ms` of visible time; the countdown pauses while the stack is hovered or focused. */
+function useAutoDismiss(item: ToastItem, paused: boolean, dismiss: (id: number) => void) {
+  const remaining = useRef(item.ms);
+  useEffect(() => {
+    if (paused || item.ms <= 0) return;
+    const start = Date.now();
+    const t = setTimeout(() => dismiss(item.id), remaining.current);
+    return () => {
+      clearTimeout(t);
+      remaining.current = Math.max(800, remaining.current - (Date.now() - start));
+    };
+  }, [paused, item.id, item.ms, dismiss]);
+}
+
+function AutoDismiss({ item, paused, dismiss }: { item: ToastItem; paused: boolean; dismiss: (id: number) => void }) {
+  useAutoDismiss(item, paused, dismiss);
+  return null;
+}
 
 const icons: Record<ToastTone, ReactNode> = {
   info: <Info size={16} className="text-fg-muted" />,
-  success: <CircleCheck size={16} className="text-accent" />,
+  success: <CircleCheck size={16} className="text-accent-ink" />,
   danger: <CircleAlert size={16} className="text-danger" />,
 };
 
@@ -14,9 +33,16 @@ const icons: Record<ToastTone, ReactNode> = {
 export function Toaster() {
   const items = useToasts((s) => s.items);
   const dismiss = useToasts((s) => s.dismiss);
+  const [hover, setHover] = useState(false);
+  const [focus, setFocus] = useState(false);
+  const paused = hover || focus;
   return (
     <div
       aria-live="polite"
+      onPointerEnter={() => setHover(true)}
+      onPointerLeave={() => setHover(false)}
+      onFocus={() => setFocus(true)}
+      onBlur={() => setFocus(false)}
       className="pointer-events-none fixed inset-x-0 top-3 z-[70] flex flex-col items-center gap-2 px-4"
     >
       <AnimatePresence initial={false}>
@@ -34,6 +60,7 @@ export function Toaster() {
               t.tone === 'danger' ? 'border-danger/30' : 'border-line-strong',
             )}
           >
+            <AutoDismiss item={t} paused={paused} dismiss={dismiss} />
             <span className="mt-0.5">{icons[t.tone]}</span>
             <div className="min-w-0 flex-1">
               <div className="text-[13px] font-medium text-fg">{t.title}</div>
@@ -41,7 +68,7 @@ export function Toaster() {
               {t.action && (
                 <button
                   type="button"
-                  className="mt-1.5 text-xs font-medium text-accent hover:underline"
+                  className="mt-1.5 text-xs font-medium text-accent-ink hover:underline"
                   onClick={() => {
                     t.action?.onClick();
                     dismiss(t.id);

@@ -9,11 +9,13 @@ export interface ToastItem {
   description?: ReactNode;
   tone: ToastTone;
   action?: { label: string; onClick: () => void };
+  /** Auto-dismiss after this many ms of visible, un-hovered time (0 = sticky). */
+  ms: number;
 }
 
 interface ToastState {
   items: ToastItem[];
-  push: (t: Omit<ToastItem, 'id'>, ms?: number) => number;
+  push: (t: Omit<ToastItem, 'id' | 'ms'>, ms?: number) => number;
   dismiss: (id: number) => void;
 }
 
@@ -23,8 +25,8 @@ export const useToasts = create<ToastState>((set, get) => ({
   items: [],
   push: (t, ms = 4500) => {
     const id = seq++;
-    set({ items: [...get().items.slice(-3), { ...t, id }] });
-    if (ms > 0) setTimeout(() => get().dismiss(id), ms);
+    // Toasts with an action stay a little longer.
+    set({ items: [...get().items.slice(-3), { ...t, id, ms: t.action && ms > 0 ? Math.max(ms, 8000) : ms }] });
     return id;
   },
   dismiss: (id) => set({ items: get().items.filter((t) => t.id !== id) }),

@@ -25,6 +25,8 @@ export const config = {
   accent: str(env.VITE_ACCENT, ''),
   defaultApiBase: str(env.VITE_API_BASE, 'https://api.poyo.ai').replace(/\/+$/, ''),
   showPoweredBy: bool(env.VITE_SHOW_POWERED_BY, true),
+  /** Showcase wall data (white-label: point at your own JSON). */
+  showcaseUrl: str(env.VITE_SHOWCASE_URL, `${import.meta.env.BASE_URL}showcase/showcase.json`),
 
   repoUrl: 'https://github.com/coolhackboy/open-generative-studio',
 

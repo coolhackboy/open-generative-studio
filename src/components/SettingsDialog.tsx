@@ -62,7 +62,7 @@ export function SettingsDialog() {
                 href={config.provider.apiKeyUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-0.5 text-xs font-medium text-accent hover:underline"
+                className="inline-flex items-center gap-0.5 text-xs font-medium text-accent-ink hover:underline"
               >
                 Get a key <ArrowUpRight size={12} />
               </a>
@@ -178,7 +178,7 @@ export function SettingsDialog() {
           </div>
 
           {import.meta.env.DEV && (
-            <p className="text-2xs text-fg-subtle">
+            <p className="text-xs text-fg-subtle">
               Dev: {isFixtureCatalog ? 'fixture catalog' : 'generated catalog'} · add{' '}
               <code className="font-mono">?mock=1</code> to simulate the API.
             </p>

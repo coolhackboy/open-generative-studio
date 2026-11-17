@@ -57,7 +57,7 @@ function VariantPicker({ model, variant }: { model: CatalogModel; variant: Varia
         <ChevronDown size={13} className="text-fg-subtle" />
       </Chip>
       <Popover open={open} onClose={() => setOpen(false)} anchorRef={ref} label="Variant" className="w-[240px] p-1.5">
-        <div className="px-2 pt-1 pb-1.5 text-2xs font-medium tracking-wide text-fg-subtle uppercase">Variant</div>
+        <div className="px-2 pt-1 pb-1.5 text-xs font-medium tracking-[0.02em] text-fg-subtle ">Variant</div>
         <div role="radiogroup" aria-label="Variant" className="flex flex-col">
           {model.variants.map((v) => (
             <button
@@ -75,7 +75,7 @@ function VariantPicker({ model, variant }: { model: CatalogModel; variant: Varia
               )}
             >
               <span>{v.label}</span>
-              <span className="truncate font-mono text-2xs text-fg-subtle">{v.model}</span>
+              <span className="truncate font-mono text-xs text-fg-subtle">{v.model}</span>
             </button>
           ))}
         </div>
@@ -243,7 +243,7 @@ export function Composer() {
           />
 
           {unsupported.length > 0 && (
-            <p className="mx-3 mb-2 flex items-start gap-1.5 rounded-sm bg-warning/10 px-2.5 py-1.5 text-2xs leading-4 text-warning">
+            <p className="mx-3 mb-2 flex items-start gap-1.5 rounded-sm bg-warning/10 px-2.5 py-1.5 text-xs leading-4 text-warning">
               <Info size={12} className="mt-0.5 shrink-0" />
               This variant requires {unsupported.map((n) => `“${humanize(n)}”`).join(', ')}, which the composer can’t edit
               yet. Use the code button to send it via the API.
@@ -285,14 +285,14 @@ export function Composer() {
               >
                 <span className="hidden sm:inline">Generate</span>
                 <span className="ml-0.5 hidden items-center gap-0.5 opacity-60 lg:inline-flex">
-                  <span className="font-mono text-2xs">{modKey}↵</span>
+                  <span className="font-mono text-xs">{modKey}↵</span>
                 </span>
               </Button>
             </div>
           </div>
           <div className="flex items-center justify-between border-t border-line px-3 py-1.5 sm:hidden">
             <CostLabel variant={variant} input={input} model={model} />
-            <span className="text-2xs text-fg-subtle">{model.category === 'video' ? 'Video' : 'Image'}</span>
+            <span className="text-xs text-fg-subtle">{model.category === 'video' ? 'Video' : 'Image'}</span>
           </div>
         </motion.div>
       </div>
@@ -307,7 +307,7 @@ export function Composer() {
             className="pointer-events-none fixed inset-0 z-[80] flex items-center justify-center bg-overlay p-6 backdrop-blur-sm"
           >
             <div className="flex w-full max-w-md flex-col items-center gap-3 rounded-lg border-2 border-dashed border-accent/60 bg-surface/80 px-8 py-12 text-center">
-              <Upload size={26} className="text-accent" />
+              <Upload size={26} className="text-accent-ink" />
               <p className="text-[15px] font-medium text-fg">
                 {mediaFields.length > 0 ? 'Drop to add as reference' : `${model.name} doesn't take references`}
               </p>
@@ -330,7 +330,7 @@ export function Composer() {
       >
         <div className="px-5 pb-5">
           <CodeTabs baseUrl={apiBase} model={variant.model} input={codeInput} />
-          <div className="mt-2 text-2xs text-fg-subtle">
+          <div className="mt-2 text-xs text-fg-subtle">
             Local files you attached are uploaded first; their hosted URLs appear in the snippet once uploads finish.{' '}
             <Kbd>Esc</Kbd> to close.
           </div>

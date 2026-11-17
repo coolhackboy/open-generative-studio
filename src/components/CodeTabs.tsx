@@ -51,7 +51,7 @@ export function CodeTabs({ baseUrl, model, input }: { baseUrl: string; model: st
             }}
             className="inline-flex size-7 items-center justify-center rounded-xs text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
           >
-            {copied ? <Check size={14} className="text-accent" /> : <Copy size={14} />}
+            {copied ? <Check size={14} className="text-accent-ink" /> : <Copy size={14} />}
           </button>
         </Tooltip>
       </div>
@@ -62,7 +62,7 @@ export function CodeTabs({ baseUrl, model, input }: { baseUrl: string; model: st
       >
         <code>{code}</code>
       </pre>
-      <p className="border-t border-line px-3 py-2 text-2xs text-fg-subtle">
+      <p className="border-t border-line px-3 py-2 text-xs text-fg-subtle">
         Reads your key from <code className="font-mono text-fg-muted">${config.provider.keyEnvVar}</code> — it is never
         embedded in the snippet.
       </p>

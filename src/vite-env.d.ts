@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_ACCENT?: string;
   readonly VITE_API_BASE?: string;
   readonly VITE_SHOW_POWERED_BY?: string;
+  readonly VITE_SITE_URL?: string;
+  readonly VITE_SHOWCASE_URL?: string;
 }
 
 interface ImportMeta {

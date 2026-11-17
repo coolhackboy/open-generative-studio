@@ -116,7 +116,7 @@ export function ModelPalette() {
               { value: 'image', label: 'Image' },
             ]}
           />
-          <span className="font-mono text-2xs text-fg-subtle">{results.length} models</span>
+          <span className="font-mono text-xs text-fg-subtle">{results.length} models</span>
         </div>
 
         <div
@@ -133,7 +133,7 @@ export function ModelPalette() {
           {results.map((r, i) => {
             const header =
               i === 0 || results[i - 1].m.category !== r.m.category ? (
-                <div className="sticky top-0 z-10 bg-surface px-2 pt-3 pb-1.5 text-2xs font-medium tracking-wide text-fg-subtle uppercase">
+                <div className="sticky top-0 z-10 bg-surface px-2 pt-3 pb-1.5 text-xs font-medium tracking-[0.02em] text-fg-subtle ">
                   {r.m.category === 'video' ? `Video · ${counts.video}` : `Image · ${results.length - counts.video}`}
                 </div>
               ) : null;
@@ -158,11 +158,11 @@ export function ModelPalette() {
                     <div className="flex items-center gap-2">
                       <span className="truncate text-sm font-medium text-fg">{r.m.name}</span>
                       {r.m.isNew && (
-                        <span className="rounded-xs bg-accent-soft px-1.5 py-px text-[10px] font-semibold tracking-wide text-accent uppercase">
+                        <span className="rounded-xs bg-accent-soft px-1.5 py-px text-[10px] font-semibold tracking-[0.02em] text-accent-ink ">
                           New
                         </span>
                       )}
-                      {selected && <Check size={14} className="shrink-0 text-accent" aria-label="Current model" />}
+                      {selected && <Check size={14} className="shrink-0 text-accent-ink" aria-label="Current model" />}
                     </div>
                     <div className="mt-0.5 truncate text-xs text-fg-subtle">
                       {r.m.provider}
@@ -179,7 +179,7 @@ export function ModelPalette() {
           })}
         </div>
 
-        <div className="hidden items-center gap-4 border-t border-line px-4 py-2.5 text-2xs text-fg-subtle sm:flex">
+        <div className="hidden items-center gap-4 border-t border-line px-4 py-2.5 text-xs text-fg-subtle sm:flex">
           <span className="inline-flex items-center gap-1">
             <Kbd>↑</Kbd>
             <Kbd>↓</Kbd> navigate

@@ -56,8 +56,8 @@ export function Onboarding({ compact }: { compact?: boolean }) {
       />
       <div className={compact ? 'grid gap-6 p-5 md:grid-cols-[1fr_auto] md:items-center' : 'grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.1fr_1fr]'}>
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-2xs font-medium tracking-wide text-fg-muted uppercase">
-            <KeyRound size={12} className="text-accent" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium tracking-[0.02em] text-fg-muted ">
+            <KeyRound size={12} className="text-accent-ink" />
             Bring your own key
           </span>
           <h2 id="onboarding-title" className="mt-4 text-2xl font-semibold tracking-[-0.025em] text-fg sm:text-[28px] sm:leading-9">

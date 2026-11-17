@@ -33,7 +33,7 @@ export function TopBar() {
 
         {MOCK_MODE && (
           <Tooltip label="Simulated API — no requests, no credits">
-            <span data-mock-badge className="inline-flex h-6 items-center gap-1 rounded-full border border-warning/30 bg-warning/10 px-2 text-2xs font-medium text-warning">
+            <span data-mock-badge className="inline-flex h-6 items-center gap-1 rounded-full border border-warning/30 bg-warning/10 px-2 text-xs font-medium text-warning">
               <FlaskConical size={12} />
               Mock
             </span>

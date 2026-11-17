@@ -4,6 +4,9 @@
  *
  * Dark is the default canvas. Light applies when the OS prefers light and the user
  * has not forced a theme, or when <html data-theme="light">.
+ *
+ * --accent      fill color (buttons, progress, dots) — paired with --accent-fg text
+ * --accent-ink  accent used as text/icon color on the page background (AA contrast)
  */
 
 :root {
@@ -14,24 +17,26 @@
   --bg-subtle: #101012;
   --surface: #151517;
   --surface-2: #1c1c1f;
-  --surface-3: #252529;
-  --glass: rgb(22 22 25 / 0.72);
+  --surface-3: #26262a;
+  --glass: rgb(20 20 23 / 0.74);
   --overlay: rgb(0 0 0 / 0.72);
 
   /* Lines */
   --line: rgb(255 255 255 / 0.08);
   --line-strong: rgb(255 255 255 / 0.14);
 
-  /* Text */
+  /* Text — all ≥ 4.5:1 on --bg and --surface */
   --fg: #f4f4f5;
-  --fg-muted: #a1a1aa;
-  --fg-subtle: #71717a;
+  --fg-muted: #b4b4bc;
+  --fg-subtle: #8b8b94;
 
-  /* Accent (PoYo lime, refined) */
+  /* Accent (PoYo lime) */
   --accent: #b5f23d;
   --accent-hover: #c6f76a;
   --accent-fg: #0b1100;
+  --accent-ink: #b5f23d;
   --accent-soft: rgb(181 242 61 / 0.12);
+  --glow: radial-gradient(60% 80% at 50% 0%, rgb(181 242 61 / 0.16), transparent 70%);
 
   /* Status */
   --danger: #f87171;
@@ -39,7 +44,7 @@
   --warning: #fbbf24;
 
   /* Effects */
-  --ring: color-mix(in oklab, var(--accent) 70%, transparent);
+  --ring: rgb(181 242 61 / 0.75);
   --shadow-lg: 0 24px 64px -16px rgb(0 0 0 / 0.6), 0 2px 8px rgb(0 0 0 / 0.4);
   --shadow-md: 0 8px 24px -8px rgb(0 0 0 / 0.5);
   --shimmer: rgb(255 255 255 / 0.05);
@@ -51,21 +56,25 @@
     --bg: #fafaf9;
     --bg-subtle: #f4f4f2;
     --surface: #ffffff;
-    --surface-2: #f4f4f3;
-    --surface-3: #e9e9e6;
-    --glass: rgb(255 255 255 / 0.78);
+    --surface-2: #f3f3f1;
+    --surface-3: #e7e7e4;
+    --glass: rgb(255 255 255 / 0.8);
     --overlay: rgb(24 24 27 / 0.45);
     --line: rgb(0 0 0 / 0.08);
     --line-strong: rgb(0 0 0 / 0.14);
     --fg: #18181b;
-    --fg-muted: #52525b;
-    --fg-subtle: #71717a;
-    --accent: #4d7c0f;
-    --accent-hover: #3f6212;
-    --accent-fg: #ffffff;
-    --accent-soft: rgb(101 163 13 / 0.12);
+    --fg-muted: #46464d;
+    --fg-subtle: #63636b;
+    --accent: #b5f23d;
+    --accent-hover: #a6e22e;
+    --accent-fg: #0b1100;
+    --accent-ink: #3f6212;
+    --accent-soft: rgb(132 204 22 / 0.16);
+    --glow: radial-gradient(60% 80% at 50% 0%, rgb(132 204 22 / 0.18), transparent 70%);
     --danger: #dc2626;
     --danger-soft: rgb(220 38 38 / 0.08);
+    --warning: #b45309;
+    --ring: rgb(77 124 15 / 0.7);
     --shadow-lg: 0 24px 64px -20px rgb(0 0 0 / 0.22), 0 2px 8px rgb(0 0 0 / 0.06);
     --shadow-md: 0 8px 24px -10px rgb(0 0 0 / 0.18);
     --shimmer: rgb(0 0 0 / 0.04);
@@ -77,21 +86,25 @@
   --bg: #fafaf9;
   --bg-subtle: #f4f4f2;
   --surface: #ffffff;
-  --surface-2: #f4f4f3;
-  --surface-3: #e9e9e6;
-  --glass: rgb(255 255 255 / 0.78);
+  --surface-2: #f3f3f1;
+  --surface-3: #e7e7e4;
+  --glass: rgb(255 255 255 / 0.8);
   --overlay: rgb(24 24 27 / 0.45);
   --line: rgb(0 0 0 / 0.08);
   --line-strong: rgb(0 0 0 / 0.14);
   --fg: #18181b;
-  --fg-muted: #52525b;
-  --fg-subtle: #71717a;
-  --accent: #4d7c0f;
-  --accent-hover: #3f6212;
-  --accent-fg: #ffffff;
-  --accent-soft: rgb(101 163 13 / 0.12);
+  --fg-muted: #46464d;
+  --fg-subtle: #63636b;
+  --accent: #b5f23d;
+  --accent-hover: #a6e22e;
+  --accent-fg: #0b1100;
+  --accent-ink: #3f6212;
+  --accent-soft: rgb(132 204 22 / 0.16);
+  --glow: radial-gradient(60% 80% at 50% 0%, rgb(132 204 22 / 0.18), transparent 70%);
   --danger: #dc2626;
   --danger-soft: rgb(220 38 38 / 0.08);
+  --warning: #b45309;
+  --ring: rgb(77 124 15 / 0.7);
   --shadow-lg: 0 24px 64px -20px rgb(0 0 0 / 0.22), 0 2px 8px rgb(0 0 0 / 0.06);
   --shadow-md: 0 8px 24px -10px rgb(0 0 0 / 0.18);
   --shimmer: rgb(0 0 0 / 0.04);
@@ -114,6 +127,7 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-fg: var(--accent-fg);
+  --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
@@ -123,8 +137,8 @@
 }
 
 @theme {
-  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
   /* 8px radius system: 4 / 8 / 12 / 16 / 24 */
   --radius-xs: 4px;
@@ -133,14 +147,70 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
 
-  --text-2xs: 0.6875rem;
-  --text-2xs--line-height: 1rem;
+  /* Type scale: 12/16 · 13/20 · 15/24 · 20/28 · 32/40 · 56/60 */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-2xl: 2rem;
+  --text-2xl--line-height: 2.5rem;
+  --text-display: 3.5rem;
+  --text-display--line-height: 3.75rem;
+  --text-display-sm: 2.25rem;
+  --text-display-sm--line-height: 2.5rem;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
   --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-sweep: sweep 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  --animate-shake: shake 320ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  --animate-ring: ring 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
   @keyframes shimmer {
-    from { background-position: 200% 0; }
-    to { background-position: -200% 0; }
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes sweep {
+    from {
+      transform: translateX(-110%);
+    }
+    to {
+      transform: translateX(340%);
+    }
+  }
+  @keyframes shake {
+    10%,
+    90% {
+      transform: translateX(-1px);
+    }
+    20%,
+    80% {
+      transform: translateX(3px);
+    }
+    30%,
+    50%,
+    70% {
+      transform: translateX(-5px);
+    }
+    40%,
+    60% {
+      transform: translateX(5px);
+    }
+  }
+  @keyframes ring {
+    from {
+      box-shadow: 0 0 0 0 rgb(181 242 61 / 0.55);
+    }
+    to {
+      box-shadow: 0 0 0 14px rgb(181 242 61 / 0);
+    }
   }
 }
