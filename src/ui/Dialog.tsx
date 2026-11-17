@@ -11,7 +11,7 @@ const sizes: Record<Size, string> = {
   sm: 'sm:max-w-sm',
   md: 'sm:max-w-lg',
   lg: 'sm:max-w-2xl',
-  xl: 'sm:max-w-4xl',
+  xl: 'sm:max-w-[960px]',
   full: 'sm:max-w-[min(1400px,calc(100vw-48px))] sm:h-[calc(100dvh-48px)]',
 };
 

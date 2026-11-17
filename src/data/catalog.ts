@@ -56,7 +56,9 @@ export function loadCatalog(): Promise<Catalog> {
 /** How many of the newest models keep their "New" badge. */
 const NEW_BADGE_COUNT = 6;
 
-const isImageVariant = (v: Variant) => /(^|[-_/.])image([-_/.]|$)/i.test(v.model) || /^image$/i.test(v.label);
+/** An image-output variant filed under a video model (e.g. grok-imagine-image) — not "image-to-video". */
+const isImageVariant = (v: Variant) =>
+  !('duration' in v.schema.properties) && (/^image$/i.test(v.label) || /[-_/.]image$/i.test(v.model));
 
 function dedupeEnums(v: Variant): Variant {
   let changed = false;
