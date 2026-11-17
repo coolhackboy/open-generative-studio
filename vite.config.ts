@@ -16,8 +16,12 @@ const escapeHtml = (s: string) =>
 function htmlMeta(opts: { brandName: string; siteUrl: string }): Plugin {
   const site = opts.siteUrl.replace(/\/+$/, '')
   const ogImage = site ? `${site}/og.jpg` : REPO_OG_IMAGE
+  let base = '/'
   return {
     name: 'html-meta',
+    configResolved(config) {
+      base = config.base
+    },
     transformIndexHtml: {
       order: 'post',
       handler(html, ctx) {
@@ -31,7 +35,7 @@ function htmlMeta(opts: { brandName: string; siteUrl: string }): Plugin {
         if (!catalog) return out
         return {
           html: out,
-          tags: [{ tag: 'link', attrs: { rel: 'modulepreload', crossorigin: true, href: `/${catalog.fileName}` }, injectTo: 'head' }],
+          tags: [{ tag: 'link', attrs: { rel: 'modulepreload', crossorigin: true, href: `${base}${catalog.fileName}` }, injectTo: 'head' }],
         }
       },
     },
