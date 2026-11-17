@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: PoYo API documentation
+    url: https://docs.poyo.ai/?utm_source=github&utm_medium=issue_template&utm_campaign=open-generative-studio
+    about: Model parameters, pricing and API reference.
+  - name: Account, billing or API key questions
+    url: https://poyo.ai/?utm_source=github&utm_medium=issue_template&utm_campaign=open-generative-studio
+    about: Questions about your PoYo account are handled by PoYo support, not in this repository.

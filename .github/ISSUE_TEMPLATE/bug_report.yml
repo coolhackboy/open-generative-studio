@@ -1,0 +1,41 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please never paste your API key — the "Copy as code" snippets in the app never contain it.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model ID
+      description: The API model ID, if the bug is about a generation (e.g. `seedance-2.5-flash`).
+  - type: textarea
+    id: request
+    attributes:
+      label: Request / error message
+      description: Paste the "Copy as code" snippet from the detail panel and the error shown in the app.
+      render: shell
+  - type: input
+    id: env
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 131 on macOS 15
+    validations:
+      required: true
+  - type: dropdown
+    id: deploy
+    attributes:
+      label: How are you running it?
+      options:
+        - npm run dev
+        - Self-hosted build (Vercel, Netlify, Docker, static host…)
+        - Other
