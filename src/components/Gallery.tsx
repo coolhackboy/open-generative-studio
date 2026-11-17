@@ -151,7 +151,7 @@ export function Gallery() {
   const label = (text: string, n: number) => (
     <>
       {text}
-      <span className="font-mono text-xs text-fg-subtle tabular-nums">{n}</span>
+      <span className="font-mono text-xs text-fg-muted tabular-nums">{n}</span>
     </>
   );
 

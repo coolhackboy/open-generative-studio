@@ -114,7 +114,7 @@ function Preview({ model, onSelect }: { model: CatalogModel; onSelect: () => voi
           {sample ? 'Sample output' : 'Model cover'}
         </span>
       </div>
-      <div className="thin-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-2">
+      <div tabIndex={0} aria-label={`${model.name} details`} className="thin-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-2">
         <div className="flex items-start gap-3">
           <ProviderIcon model={model} />
           <div className="min-w-0 flex-1">

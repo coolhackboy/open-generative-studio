@@ -143,7 +143,8 @@ function Group({ children, label, divider, dim }: { children: ReactNode; label: 
       className={cn(
         'flex shrink-0 items-center gap-1.5 transition-opacity duration-200',
         divider && 'sm:border-l sm:border-line-strong sm:pl-2',
-        dim && 'opacity-45',
+        // Previewing another model's prompt: soften, but keep text at AA contrast.
+        dim && 'saturate-0',
       )}
     >
       {children}

@@ -73,7 +73,7 @@
     --glow: radial-gradient(60% 80% at 50% 0%, rgb(132 204 22 / 0.18), transparent 70%);
     --danger: #dc2626;
     --danger-soft: rgb(220 38 38 / 0.08);
-    --warning: #b45309;
+    --warning: #92400e;
     --ring: rgb(77 124 15 / 0.7);
     --shadow-lg: 0 24px 64px -20px rgb(0 0 0 / 0.22), 0 2px 8px rgb(0 0 0 / 0.06);
     --shadow-md: 0 8px 24px -10px rgb(0 0 0 / 0.18);
@@ -103,7 +103,7 @@
   --glow: radial-gradient(60% 80% at 50% 0%, rgb(132 204 22 / 0.18), transparent 70%);
   --danger: #dc2626;
   --danger-soft: rgb(220 38 38 / 0.08);
-  --warning: #b45309;
+  --warning: #92400e;
   --ring: rgb(77 124 15 / 0.7);
   --shadow-lg: 0 24px 64px -20px rgb(0 0 0 / 0.22), 0 2px 8px rgb(0 0 0 / 0.06);
   --shadow-md: 0 8px 24px -10px rgb(0 0 0 / 0.18);
