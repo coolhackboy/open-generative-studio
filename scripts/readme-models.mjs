@@ -17,6 +17,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const README = path.join(ROOT, 'README.md');
 const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/data/catalog.json'), 'utf8'));
+// Same normalization as the app, so the README count/table match the model palette.
+const { normalize } = await import(pathToFileURL(path.join(ROOT, 'src/data/normalize.ts')).href);
+const normalized = normalize(catalog.models);
 
 let pricing = null;
 try {
@@ -51,8 +54,8 @@ function fromPrice(model) {
 const esc = (s) => String(s).replace(/\|/g, '\\|');
 
 function table(category) {
-  const rows = catalog.models
-    .filter((m) => m.category === category && m.variants.length > 0)
+  const rows = normalized
+    .filter((m) => m.category === category)
     .sort((a, b) => a.order - b.order)
     .map((m) => {
       const name = `[${esc(m.name)}](${m.pageUrl}?utm_source=github&utm_medium=readme&utm_campaign=open-generative-studio)`;
@@ -66,7 +69,7 @@ function table(category) {
   ].join('\n');
 }
 
-const models = catalog.models.filter((m) => m.variants.length > 0);
+const models = normalized;
 const videos = models.filter((m) => m.category === 'video').length;
 const images = models.filter((m) => m.category === 'image').length;
 const date = (catalog.generatedAt || '').slice(0, 10);

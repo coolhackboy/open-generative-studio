@@ -2,7 +2,7 @@ import { motion, useInView, useReducedMotion } from 'motion/react';
 import { ArrowRight, ArrowUpRight, FlaskConical, KeyRound, Sparkles, Star } from 'lucide-react';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { config } from '../config';
-import { catalog, getModel, getVariant } from '../data/catalog';
+import { getModel, getVariant, models } from '../data/catalog';
 import { MOCK_MODE } from '../lib/api';
 import { formatUSD } from '../lib/cost';
 import { focusPrompt, useComposer, useSettings, useUI } from '../lib/store';
@@ -229,7 +229,8 @@ function Ctas() {
   );
 }
 
-const modelCount = () => catalog.models.filter((m) => m.variants.length > 0).length;
+/** Same count as the model palette (catalog entries after normalization). */
+const modelCount = () => models.length;
 
 function HeroCopy({ compact }: { compact?: boolean }) {
   return (

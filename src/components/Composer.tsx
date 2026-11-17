@@ -1,5 +1,5 @@
 import { animate, AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ArrowUp, ChevronDown, Code2, Info, Upload } from 'lucide-react';
+import { ArrowUp, ChevronDown, Code2, Info, SlidersHorizontal, Upload } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { estimateCost, formatUSD, isUsageBilled, startingPriceLabel } from '../lib/cost';
 import { modKey } from '../lib/format';
@@ -11,7 +11,9 @@ import {
   getUnsupportedRequired,
   hasPrompt,
   humanize,
+  initialParams,
   splitParamFields,
+  type Params,
 } from '../lib/schema';
 import { useComposer, useCurrentModel, useSettings, useUI } from '../lib/store';
 import { addFiles, generate, kindOfFile } from '../lib/tasks';
@@ -21,20 +23,27 @@ import { CodeTabs } from './CodeTabs';
 import { AttachButton, MediaTray } from './MediaTray';
 import { useMediaPicker } from './useMediaPicker';
 import { ModelThumb } from './ModelThumb';
-import { MoreParams, ParamChip } from './ParamControls';
+import { FieldEditor, MoreParams, ParamChip } from './ParamControls';
 
 // ---------------------------------------------------------------- pieces
 
-function ModelButton({ model, preview }: { model: CatalogModel; preview?: CatalogModel }) {
+function ModelButton({ model, preview, fill }: { model: CatalogModel; preview?: CatalogModel; fill?: boolean }) {
   const setOpen = useUI((s) => s.setPaletteOpen);
   const shown = preview ?? model;
   return (
-    <Tooltip label={<span className="inline-flex items-center gap-1">Switch model · {modKey} K</span>} side="top">
+    <Tooltip
+      label={<span className="inline-flex items-center gap-1">Switch model · {modKey} K</span>}
+      side="top"
+      className={fill ? 'min-w-0 flex-1' : undefined}
+    >
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Model: ${model.name}. Change model`}
-        className="inline-flex h-8 max-w-[240px] shrink-0 items-center gap-2 rounded-sm border border-line-strong bg-surface-2 pr-2 pl-1 text-sm font-medium text-fg transition-colors hover:bg-surface-3 max-sm:h-11"
+        className={cn(
+          'inline-flex h-8 shrink-0 items-center gap-2 rounded-sm border border-line-strong bg-surface-2 pr-2 pl-1 text-sm font-medium text-fg transition-colors hover:bg-surface-3 max-sm:h-11',
+          fill ? 'w-full min-w-0' : 'max-w-[240px]',
+        )}
       >
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
@@ -43,7 +52,7 @@ function ModelButton({ model, preview }: { model: CatalogModel; preview?: Catalo
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="flex min-w-0 items-center gap-2"
+            className="flex min-w-0 flex-1 items-center gap-2"
           >
             <ModelThumb model={shown} className="size-6 rounded-xs" />
             <span className="truncate">{shown.name}</span>
@@ -135,7 +144,7 @@ function PriceHint({ variant, model }: { variant: Variant; model: CatalogModel }
 }
 
 /** Toolbar group; groups after the first carry a hairline divider that also reads well when wrapped. */
-function Group({ children, label, divider, dim }: { children: ReactNode; label: string; divider?: boolean; dim?: boolean }) {
+function Group({ children, label, divider }: { children: ReactNode; label: string; divider?: boolean }) {
   return (
     <div
       role="group"
@@ -143,8 +152,6 @@ function Group({ children, label, divider, dim }: { children: ReactNode; label: 
       className={cn(
         'flex shrink-0 items-center gap-1.5 transition-opacity duration-200',
         divider && 'sm:border-l sm:border-line-strong sm:pl-2',
-        // Previewing another model's prompt: soften, but keep text at AA contrast.
-        dim && 'saturate-0',
       )}
     >
       {children}
@@ -208,6 +215,19 @@ function useFileDrop(enabled: boolean) {
     };
   }, [enabled]);
   return dragging;
+}
+
+function useMediaQuery(query: string): boolean {
+  const [match, setMatch] = useState(() => window.matchMedia?.(query).matches ?? false);
+  useEffect(() => {
+    const mq = window.matchMedia?.(query);
+    if (!mq) return;
+    const on = () => setMatch(mq.matches);
+    on();
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, [query]);
+  return match;
 }
 
 // ---------------------------------------------------------------- animated placeholder
@@ -282,7 +302,10 @@ export function Composer() {
   const apiBase = useSettings((s) => s.apiBase);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [focused, setFocused] = useState(false);
+  const narrow = useMediaQuery('(max-width: 639px)');
+  const setVariant = useComposer((s) => s.setVariant);
   const reduce = useReducedMotion();
   const { pick, input: pickerInput } = useMediaPicker();
 
@@ -325,10 +348,120 @@ export function Composer() {
     return variant ? estimateCost(variant, input) : null;
   }, [demo, variant, input]);
 
+  // While the placeholder previews another model, show that model's own settings (inert).
+  const shownMediaFields = useMemo(
+    () => (demo ? getMediaFields(demo.variant, demo.model.category) : mediaFields),
+    [demo, mediaFields],
+  );
+  const shown = useMemo(
+    () =>
+      demo
+        ? { ...splitParamFields(getParamFields(demo.variant)), params: initialParams(demo.variant, demo.example.input as Params) }
+        : { primary, more, params },
+    [demo, primary, more, params],
+  );
+
   const dragging = useFileDrop(mediaFields.length > 0);
 
   if (!model || !variant) return null;
   const moreInvalid = !!invalid && more.some((f) => f.name === invalid.field);
+  const hasParams = shown.primary.length > 0 || shown.more.length > 0;
+  const shownKey = demo ? `demo:${demo.key}` : variant.model;
+
+  const codeButton = (
+    <Tooltip label="Copy as code" side="top">
+      <button
+        type="button"
+        aria-label="Copy current settings as code"
+        onClick={() => setCodeOpen(true)}
+        className="inline-flex size-8 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-2 hover:text-fg"
+      >
+        <Code2 size={16} />
+      </button>
+    </Tooltip>
+  );
+
+  const generateButton = (
+    <Tooltip
+      label={
+        estimate ? (
+          <span>
+            {estimate.label} · {estimate.credits} credits
+          </span>
+        ) : (
+          <span>Generate · {modKey}↵</span>
+        )
+      }
+      side="top"
+    >
+      <button
+        type="button"
+        onClick={() => void generate()}
+        disabled={submitting}
+        aria-busy={submitting || undefined}
+        aria-keyshortcuts="Control+Enter Meta+Enter"
+        aria-label={estimate && !demo ? `Generate, about ${formatUSD(estimate.usd)}` : 'Generate'}
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-sm bg-accent px-3 text-sm font-medium whitespace-nowrap text-accent-fg shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] transition-[background-color,transform] duration-150 select-none hover:bg-accent-hover active:scale-[0.97] disabled:opacity-70 max-sm:h-11 sm:px-3.5"
+      >
+        {submitting ? <Spinner size={15} /> : <ArrowUp size={16} strokeWidth={2.25} />}
+        <span className="hidden sm:inline">Generate</span>
+        {estimate && (
+          <span className="font-mono text-[13px] tabular-nums">
+            <span className="hidden sm:inline">· </span>
+            <TweenUSD value={estimate.usd} />
+          </span>
+        )}
+      </button>
+    </Tooltip>
+  );
+
+  /** References + settings for the shown model; crossfades with the preview, inert while previewing. */
+  const shownControls = (wide: boolean) => (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={shownKey}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        inert={!!demo}
+        aria-hidden={demo ? true : undefined}
+        className={cn('flex items-center gap-1.5', wide ? 'flex-wrap sm:gap-x-2 sm:gap-y-2' : 'shrink-0')}
+      >
+        {shownMediaFields.length > 0 && (
+          <Group label="References" divider={wide}>
+            <AttachButton fields={shownMediaFields} onPick={pick} />
+          </Group>
+        )}
+        {hasParams &&
+          (wide ? (
+            <Group label="Settings" divider>
+              {shown.primary.map((f) => (
+                <Shake key={f.name} active={!demo && invalid?.field === f.name} nonce={invalid?.nonce}>
+                  <ParamChip field={f} value={shown.params[f.name]} onChange={(v) => setParam(f.name, v)} />
+                </Shake>
+              ))}
+              <Shake active={!demo && moreInvalid} nonce={invalid?.nonce}>
+                <MoreParams fields={shown.more} params={shown.params} onChange={setParam} />
+              </Shake>
+            </Group>
+          ) : (
+            <Shake
+              active={!demo && !!invalid && [...primary, ...more].some((f) => f.name === invalid.field)}
+              nonce={invalid?.nonce}
+            >
+              <Chip
+                aria-label="Settings"
+                aria-haspopup="dialog"
+                onClick={() => setSheetOpen(true)}
+                icon={<SlidersHorizontal size={16} />}
+                className="h-11 px-3.5"
+              />
+            </Shake>
+          ))}
+      </motion.div>
+    </AnimatePresence>
+  );
 
   return (
     <>
@@ -374,79 +507,32 @@ export function Composer() {
             </p>
           )}
 
-          <div className="flex items-end gap-2 px-2.5 pb-2.5">
-            <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-0.5 sm:gap-x-2 max-sm:[mask-image:linear-gradient(to_right,black_calc(100%-20px),transparent)] max-sm:pr-5 sm:flex-wrap sm:gap-y-2 sm:overflow-visible">
-              <Group label="Model">
-                <ModelButton model={model} preview={demo?.model} />
-                <VariantPicker model={model} variant={variant} />
-              </Group>
-              {mediaFields.length > 0 && (
-                <Group label="References" divider dim={!!demo}>
-                  <AttachButton fields={mediaFields} onPick={pick} />
-                </Group>
-              )}
-              {(primary.length > 0 || more.length > 0) && (
-                <Group label="Settings" divider dim={!!demo}>
-                    {primary.map((f) => (
-                      <Shake key={f.name} active={invalid?.field === f.name} nonce={invalid?.nonce}>
-                        <ParamChip field={f} value={params[f.name]} onChange={(v) => setParam(f.name, v)} />
-                      </Shake>
-                    ))}
-                  <Shake active={moreInvalid} nonce={invalid?.nonce}>
-                    <MoreParams fields={more} params={params} onChange={setParam} />
-                  </Shake>
-                </Group>
-              )}
+          {narrow ? (
+            <div className="flex items-center gap-1.5 px-2.5 pb-2.5">
+              <ModelButton model={model} preview={demo?.model} fill />
+              {shownControls(false)}
+              {generateButton}
             </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              {!estimate && (
-                <span className="hidden sm:inline-flex">
-                  <PriceHint variant={variant} model={model} />
-                </span>
-              )}
-              <Tooltip label="Copy as code" side="top">
-                <button
-                  type="button"
-                  aria-label="Copy current settings as code"
-                  onClick={() => setCodeOpen(true)}
-                  className="inline-flex size-8 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-2 hover:text-fg max-sm:size-11"
-                >
-                  <Code2 size={16} />
-                </button>
-              </Tooltip>
-              <Tooltip
-                label={
-                  estimate ? (
-                    <span>
-                      {estimate.label} · {estimate.credits} credits
-                    </span>
-                  ) : (
-                    <span>Generate · {modKey}↵</span>
-                  )
-                }
-                side="top"
-              >
-                <button
-                  type="button"
-                  onClick={() => void generate()}
-                  disabled={submitting}
-                  aria-busy={submitting || undefined}
-                  aria-keyshortcuts="Control+Enter Meta+Enter"
-                  aria-label={estimate && !demo ? `Generate, about ${formatUSD(estimate.usd)}` : 'Generate'}
-                  className="inline-flex h-9 shrink-0 items-center gap-2 rounded-sm bg-accent px-3 text-sm font-medium whitespace-nowrap text-accent-fg shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] transition-[background-color,transform] duration-150 select-none hover:bg-accent-hover active:scale-[0.97] disabled:opacity-70 max-sm:h-11 max-sm:px-3.5 sm:px-3.5"
-                >
-                  {submitting ? <Spinner size={15} /> : <ArrowUp size={16} strokeWidth={2.25} />}
-                  <span className="hidden sm:inline">Generate</span>
-                  {estimate && (
-                    <span className="font-mono text-[13px] tabular-nums">
-                      <span className="hidden sm:inline">· </span>
-                      <TweenUSD value={estimate.usd} />
-                    </span>
-                  )}
-                </button>
-              </Tooltip>
+          ) : (
+            <div className="flex items-end gap-2 px-2.5 pb-2.5">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 py-0.5 sm:gap-x-2 sm:gap-y-2">
+                <Group label="Model">
+                  <ModelButton model={model} preview={demo?.model} />
+                  {!demo && <VariantPicker model={model} variant={variant} />}
+                </Group>
+                {shownControls(true)}
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {!estimate && (
+                  <span className="hidden sm:inline-flex">
+                    <PriceHint variant={variant} model={model} />
+                  </span>
+                )}
+                {codeButton}
+                {generateButton}
+              </div>
             </div>
-          </div>
+          )}
           {!estimate && (
             <div className="flex items-center justify-between border-t border-line px-3 py-1.5 sm:hidden">
               <PriceHint variant={variant} model={model} />
@@ -479,6 +565,51 @@ export function Composer() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Dialog open={sheetOpen} onClose={() => setSheetOpen(false)} title="Settings" description={model.name} size="md">
+        <div className="thin-scrollbar flex flex-col gap-5 overflow-y-auto px-5 pt-1 pb-5">
+          {model.variants.length > 1 && (
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-fg">Variant</span>
+              <div role="radiogroup" aria-label="Variant" className="flex flex-wrap gap-1.5">
+                {model.variants.map((v) => (
+                  <button
+                    key={v.model}
+                    type="button"
+                    role="radio"
+                    aria-checked={v.model === variant.model}
+                    onClick={() => setVariant(v.model)}
+                    className={cn(
+                      'h-10 rounded-sm border px-3 text-sm',
+                      v.model === variant.model ? 'border-line-strong bg-surface-3 text-fg' : 'border-line text-fg-muted',
+                    )}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {[...primary, ...more].map((f) => (
+            <Shake key={f.name} active={invalid?.field === f.name} nonce={invalid?.nonce} block className="rounded-md">
+              <div className={cn('flex gap-2', f.control.kind === 'boolean' ? 'items-center justify-between' : 'flex-col')}>
+                {f.control.kind !== 'range' && <span className="text-sm text-fg">{f.label}</span>}
+                <FieldEditor field={f} value={params[f.name]} onChange={(v) => setParam(f.name, v)} />
+              </div>
+            </Shake>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              setSheetOpen(false);
+              setCodeOpen(true);
+            }}
+            className="flex h-11 items-center justify-center gap-2 rounded-sm border border-line text-sm text-fg-muted hover:bg-surface-2 hover:text-fg"
+          >
+            <Code2 size={16} /> Copy as code
+          </button>
+        </div>
+      </Dialog>
 
       <Dialog
         open={codeOpen}
