@@ -50,5 +50,13 @@ export default defineConfig(({ mode }) => {
         siteUrl: env.VITE_SITE_URL?.trim() || '',
       }),
     ],
+    build: {
+      rollupOptions: {
+        output: {
+          // Long-lived vendor chunks keep the app chunk small and cache-friendly.
+          manualChunks: { react: ['react', 'react-dom'], motion: ['motion', 'motion/react'] },
+        },
+      },
+    },
   }
 })

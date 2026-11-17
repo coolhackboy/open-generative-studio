@@ -218,6 +218,7 @@ function Ctas() {
         <button
           type="button"
           onClick={() => void seedDemo()}
+          data-mock-badge
           className="inline-flex h-11 items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-4 text-sm font-medium text-warning"
         >
           <FlaskConical size={15} />

@@ -16,7 +16,7 @@ Self-hostable · white-label · runs entirely in the browser · MIT
 ![Vite 6](https://img.shields.io/badge/Vite-6-646cff)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 
-<img src="docs/screenshots/gallery-dark.webp" alt="Open Generative Studio — dark gallery with a floating composer" width="100%" />
+<img src="docs/screenshots/hero-showcase.webp" alt="Open Generative Studio — a live wall of real model outputs behind one prompt box" width="100%" />
 
 </div>
 
@@ -29,35 +29,51 @@ API — no backend to deploy, no database, nothing to maintain. Fork it to build
 
 ## Features
 
-- **One studio, many models** — video and image models from ByteDance, Kling, Google, OpenAI, Black Forest Labs,
+- **One prompt box, many models** — video and image models from ByteDance, Kling, Google, OpenAI, Black Forest Labs,
   MiniMax, Alibaba, xAI and more, all through one API key.
-- **Gallery-first UI** — your works are the hero: masonry gallery, live progress cards, failed cards with retry,
-  image / video filters, dark and light themes.
+- **Live showcase** — the first screen is a wall of real outputs from the catalog's models; hover any tile to see the
+  model (and the exact prompt and cost when known) and load it into the composer.
 - **Schema-driven composer** — parameter chips are generated from each model's input schema (aspect ratio,
-  duration, resolution, count…), with client-side validation and a **live cost estimate** before you generate.
+  duration, resolution, count…), with field-level validation and the **live price on the Generate button**.
 - **Reference media** — drag & drop, paste or pick images, videos and audio; they are uploaded and routed to the
   right input (first frame, reference images, reference video…).
-- **Model palette** — <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>K</kbd> to search every model with its starting price.
+- **Two-pane model palette** — <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>K</kbd>: forgiving search ("klng", "nanobanana",
+  "i2v", makers like "bytedance"), starting prices, and a preview with samples, limits and the price table.
+- **Gallery-first** — masonry grouped by day, live progress with ETA, an un-blur moment when results land, tab-title
+  and favicon badges for unseen results, multi-select with bulk download/delete, video scrubbing.
+- **Follow-ups in one click** — Animate an image into a video, Edit it, use any output as a reference, or reuse its settings.
 - **Copy as code** — every generation exports the exact submit + poll request as **cURL, JavaScript or Python**.
 - **Keyboard-first** — <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd> generate · <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>K</kbd>
-  models · <kbd>/</kbd> focus prompt · <kbd>←</kbd> <kbd>→</kbd> browse · <kbd>Esc</kbd> close.
+  models · <kbd>/</kbd> prompt · <kbd>←</kbd> <kbd>→</kbd> browse · <kbd>F</kbd> fullscreen · <kbd>?</kbd> all shortcuts.
 - **Private by default** — your key stays in `localStorage`; your gallery lives in IndexedDB on your device.
-- **Resumable** — unfinished tasks keep polling after a page reload.
-- **White-label** — brand name, logo, accent color and API base via environment variables.
-- **Responsive** — down to 390 px wide, with a docked composer on mobile.
+- **Resumable** — unfinished tasks keep polling after a reload (with jitter and `Retry-After`-aware backoff).
+- **White-label** — brand name, logo, accent color, API base and showcase via environment variables.
+- **Accessible & responsive** — AA contrast in both themes, focus rings, reduced-motion support, 44 px touch
+  targets, down to 390 px wide.
+
+<p align="center">
+  <img src="docs/screenshots/demo.webp" alt="Typing a prompt, generating, and the result appearing in the gallery" width="100%" />
+  <br />
+  <sub>Recorded in the built-in mock mode, which returns sample media instead of calling the API.</sub>
+</p>
 
 <table>
   <tr>
-    <td width="62%"><img src="docs/screenshots/lightbox-copy-as-code.webp" alt="Detail panel with Copy as code" /></td>
-    <td width="38%"><img src="docs/screenshots/mobile.webp" alt="Mobile gallery" /></td>
+    <td width="62%"><img src="docs/screenshots/gallery-dark.webp" alt="Gallery with a running generation and the composer" /></td>
+    <td width="38%"><img src="docs/screenshots/mobile-hero.webp" alt="Mobile first screen" /></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/model-palette.webp" alt="Model palette (Ctrl+K)" /></td>
+    <td><img src="docs/screenshots/lightbox-copy-as-code.webp" alt="Detail panel with follow-up actions and Copy as code" /></td>
+    <td><img src="docs/screenshots/mobile.webp" alt="Mobile gallery" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/model-palette.webp" alt="Two-pane model palette (Ctrl+K)" /></td>
     <td><img src="docs/screenshots/gallery-light.webp" alt="Light theme" /></td>
   </tr>
 </table>
 
-<sub>Screenshots use the built-in mock mode with sample media from PoYo model showcases.</sub>
+<sub>Showcase tiles are real outputs published on PoYo's model pages. Gallery screenshots use mock mode with sample
+media from those pages.</sub>
 
 ## Quick start
 
@@ -111,6 +127,8 @@ or set them in your hosting dashboard):
 | `VITE_ACCENT` | PoYo lime | Accent color — any CSS color; hover and contrast colors are derived |
 | `VITE_API_BASE` | `https://api.poyo.ai` | API endpoint the browser talks to |
 | `VITE_SHOW_POWERED_BY` | `true` | Show the small "Powered by PoYo" link |
+| `VITE_SITE_URL` | GitHub repo | Your public URL, used for absolute `og:url` / `og:image` |
+| `VITE_SHOWCASE_URL` | `/showcase/showcase.json` | Your own showcase wall (same JSON shape) |
 
 **How billing works.** Generations are billed to whichever key the browser sends. Out of the box each visitor uses
 their own PoYo key, so hosting a public copy costs you nothing.
@@ -272,9 +290,10 @@ API key — pay as you go, no subscription required. Prices for each model are l
 <summary><b>Where are my generations stored?</b></summary>
 
 In your browser: the gallery (prompts, settings, result URLs) is kept in IndexedDB, and your API key in
-`localStorage`. Nothing is sent to any server other than the API base you configured. The media files themselves are
-hosted by PoYo; download anything you want to keep long-term. Uploaded reference images expire after 72 hours.
-Clearing site data or switching browsers starts a fresh gallery.
+`localStorage`. Your key, prompts and uploads go only to the API base you configured. Besides that, the page loads
+showcase media and model icons from `storage.poyo.ai` and the star count from GitHub's public API; fonts are
+self-hosted. The media files themselves are hosted by PoYo; download anything you want to keep long-term. Uploaded
+reference images expire after 72 hours. Clearing site data or switching browsers starts a fresh gallery.
 </details>
 
 <details>
@@ -296,6 +315,9 @@ credential, avoid using it on shared computers and clear it in Settings when you
 <summary><b>Do I need a backend?</b></summary>
 
 No. The PoYo API allows cross-origin requests, so the studio is a static site that talks to the API directly.
+To change what the first screen shows, point `VITE_SHOWCASE_URL` at your own JSON (see
+[`public/showcase/showcase.json`](public/showcase/showcase.json)); set `input`/`credits` only for outputs whose exact
+request you know.
 </details>
 
 <details>
@@ -308,15 +330,16 @@ generated from the schema, so a new model needs no new components. After editing
 
 ## Tech stack
 
-React 19 · TypeScript (strict) · Vite 6 · Tailwind CSS 4 · Zustand · Motion · idb-keyval · Lucide icons.
+React 19 · TypeScript (strict) · Vite 6 · Tailwind CSS 4 · Zustand · Motion · idb-keyval · Lucide icons · Geist (self-hosted).
 
 ```
 src/
-  ui/          generic primitives (Button, Dialog, Popover, Segmented, Slider, Toast…) — reusable in any app
+  ui/          generic primitives (Button, Dialog, Popover, Segmented, Slider, Toast, Masonry…) — reusable in any app
   styles/      design tokens for dark & light themes
-  components/  gallery, composer, model palette, lightbox, settings
-  lib/         api client, task polling, schema → controls, pricing, code snippets, storage
-  data/        generated model catalog
+  components/  showcase, gallery, composer, model palette, lightbox, settings
+  lib/         api client, task polling, schema → controls, search, pricing, code snippets, storage
+  data/        generated model catalog (+ UI-side normalization)
+public/showcase/  real sample outputs for the first screen
   config.ts    brand + backend configuration
 ```
 
