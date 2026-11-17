@@ -25,6 +25,12 @@ export function TopBar() {
         scrolled ? 'glass border-line' : 'border-transparent bg-bg',
       )}
     >
+      <a
+        href="#prompt-input"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[90] focus:rounded-sm focus:bg-surface focus:px-3 focus:py-2"
+      >
+        Skip to prompt
+      </a>
       <div className="mx-auto flex h-14 max-w-[1800px] items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <a href="./" className="flex min-w-0 items-center gap-2.5 rounded-sm" aria-label={`${config.brandName} home`}>
           <Logo />

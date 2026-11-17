@@ -7,8 +7,8 @@
       "model": "seedance-2-5-flash",
       "variant": "seedance-2.5-flash",
       "type": "video",
-      "src": "showcase/seedance-2-5-flash-ceramicist-hands.mp4",
-      "poster": "showcase/seedance-2-5-flash-ceramicist-hands.webp",
+      "src": "seedance-2-5-flash-ceramicist-hands.mp4",
+      "poster": "seedance-2-5-flash-ceramicist-hands.webp",
       "alt": "Close-up of a ceramicist's hands shaping wet clay on a spinning pottery wheel. Warm golden window light from the side, dust particles floating in the air, water glistening on the clay as the fingers press inward and the bowl rises and widens. Shallow depth of field, slow push-in, the same pair of hands and the same bowl throughout. Sound: the soft whir of the wheel, wet clay squelching, quiet studio ambience. No music, no subtitles, no on-screen text.",
       "input": {
         "prompt": "Close-up of a ceramicist's hands shaping wet clay on a spinning pottery wheel. Warm golden window light from the side, dust particles floating in the air, water glistening on the clay as the fingers press inward and the bowl rises and widens. Shallow depth of field, slow push-in, the same pair of hands and the same bowl throughout. Sound: the soft whir of the wheel, wet clay squelching, quiet studio ambience. No music, no subtitles, no on-screen text.",
@@ -26,8 +26,8 @@
       "model": "seedance-2-5-flash",
       "variant": "seedance-2.5-flash",
       "type": "video",
-      "src": "showcase/seedance-2-5-flash-red-car-rain.mp4",
-      "poster": "showcase/seedance-2-5-flash-red-car-rain.webp",
+      "src": "seedance-2-5-flash-red-car-rain.mp4",
+      "poster": "seedance-2-5-flash-red-car-rain.webp",
       "alt": "Tracking shot alongside a red sports car carving through a winding mountain road in heavy rain. The camera keeps pace beside the car as it leans into a tight curve, spray rising from the tires, rain streaking past, headlights cutting through low clouds, dark pine forest and wet asphalt reflecting the light. The same red car stays sharp and consistent throughout. Sound: engine roar rising through the gears, tires hissing on wet asphalt, steady rain. No subtitles, no on-screen text.",
       "input": {
         "prompt": "Tracking shot alongside a red sports car carving through a winding mountain road in heavy rain. The camera keeps pace beside the car as it leans into a tight curve, spray rising from the tires, rain streaking past, headlights cutting through low clouds, dark pine forest and wet asphalt reflecting the light. The same red car stays sharp and consistent throughout. Sound: engine roar rising through the gears, tires hissing on wet asphalt, steady rain. No subtitles, no on-screen text.",
@@ -98,16 +98,6 @@
       "aspect": 0.75
     },
     {
-      "id": "landing-gemini-omni-1-2-flash-23",
-      "model": "gemini-omni-1-2-flash",
-      "type": "video",
-      "src": "https://storage.poyo.ai/models/gemini-omni-1-2-flash/features/first-last-frames-aaffa86686db.mp4",
-      "poster": "https://storage.poyo.ai/models/gemini-omni-1-2-flash/features/first-last-frames-poster-822b2545682f.webp",
-      "alt": "An exterior ramen shop start frame and an interior diner end frame joined by one continuous camera push",
-      "source": "PoYo model page: https://poyo.ai/models/gemini-omni-1-2-flash",
-      "aspect": 1.056
-    },
-    {
       "id": "landing-flux-3-klein-51",
       "model": "flux-3-klein",
       "type": "image",
@@ -125,15 +115,6 @@
       "alt": "A detective in a trench coat and a young woman in a yellow raincoat talk in a rainy diner at night",
       "source": "PoYo model page: https://poyo.ai/models/pixverse-v6-max",
       "aspect": 1.791
-    },
-    {
-      "id": "landing-seedream-5-0-flash-71",
-      "model": "seedream-5-0-flash",
-      "type": "image",
-      "src": "https://storage.poyo.ai/models/seedream-5-0-flash/features/forest-showcase.webp",
-      "alt": "Forest creek after rain with a close-up of actual moss textures",
-      "source": "PoYo model page: https://poyo.ai/models/seedream-5-0-flash",
-      "aspect": 1.778
     },
     {
       "id": "landing-pixverse-v6-max-41",

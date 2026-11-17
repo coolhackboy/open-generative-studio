@@ -209,7 +209,7 @@ export function Composer() {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center sm:px-4 sm:pb-5">
+      <section aria-label="Create" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center sm:px-4 sm:pb-5">
         <motion.div
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -295,7 +295,7 @@ export function Composer() {
             <span className="text-xs text-fg-subtle">{model.category === 'video' ? 'Video' : 'Image'}</span>
           </div>
         </motion.div>
-      </div>
+      </section>
 
       <AnimatePresence>
         {dragging && (

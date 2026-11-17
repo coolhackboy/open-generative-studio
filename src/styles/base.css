@@ -193,3 +193,12 @@
     animation: none;
   }
 }
+
+@keyframes wall-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-50% - 5px));
+  }
+}

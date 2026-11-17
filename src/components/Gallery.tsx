@@ -6,8 +6,8 @@ import { useGallery, useSettings, type GalleryFilter } from '../lib/store';
 import type { Generation } from '../lib/types';
 import { Masonry, Segmented } from '../ui';
 import { GenerationCard } from './GenerationCard';
-import { Onboarding } from './Onboarding';
-import { StartHere } from './StartHere';
+import { KeyReminder } from './Onboarding';
+import { Inspiration, ShowcaseHero } from './Showcase';
 
 const getKey = (g: Generation) => g.id;
 const getAspect = (g: Generation) =>
@@ -35,22 +35,12 @@ export function Gallery() {
     [items],
   );
 
-  const showOnboarding = !hasKey || MOCK_MODE;
-
   if (!loaded) return <div className="min-h-[60dvh]" aria-busy="true" />;
 
   if (items.length === 0) {
     return (
-      <div className="pt-2">
-        {showOnboarding ? (
-          <Onboarding />
-        ) : (
-          <div className="pt-6 pb-2">
-            <h1 className="text-2xl font-semibold tracking-[-0.025em] text-fg sm:text-[28px]">What will you make?</h1>
-            <p className="mt-2 text-sm text-fg-muted">Your generations will appear here, newest first. Saved locally in this browser.</p>
-          </div>
-        )}
-        <StartHere />
+      <div className="-mx-3 -mt-2 sm:-mx-6">
+        <ShowcaseHero />
       </div>
     );
   }
@@ -64,7 +54,7 @@ export function Gallery() {
 
   return (
     <div className="flex flex-col gap-5">
-      {!hasKey && !MOCK_MODE && <Onboarding compact />}
+      {!hasKey && !MOCK_MODE && <KeyReminder />}
       <div className="flex items-center justify-between gap-3">
         <h1 className="sr-only">Your gallery</h1>
         <Segmented<GalleryFilter>
@@ -88,6 +78,7 @@ export function Gallery() {
       ) : (
         <Masonry items={visible} getKey={getKey} getAspect={getAspect} render={renderCard} gap={10} />
       )}
+      {items.length < 8 && <Inspiration />}
     </div>
   );
 }

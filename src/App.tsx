@@ -57,12 +57,6 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <a
-        href="#prompt-input"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[90] focus:rounded-sm focus:bg-surface focus:px-3 focus:py-2"
-      >
-        Skip to prompt
-      </a>
       <TopBar />
       <main className="mx-auto max-w-[1800px] px-3 pt-2 pb-[260px] sm:px-6 sm:pb-[220px]">
         <Gallery />
