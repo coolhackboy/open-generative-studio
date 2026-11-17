@@ -152,7 +152,8 @@ export function Lightbox() {
     : [];
 
   const file = gen?.files[fileIndex];
-  const usd = gen?.credits != null ? gen.credits * config.provider.creditUSD : undefined;
+  const charged = gen && gen.credits != null && (gen.credits > 0 || gen.status === 'finished') ? gen.credits : undefined;
+  const usd = charged != null ? charged * config.provider.creditUSD : undefined;
 
   return (
     <Dialog open={Boolean(gen)} onClose={close} title={gen ? `${gen.modelName}: ${gen.prompt}` : 'Details'} hideHeader size="full" mobile="full">
@@ -321,10 +322,12 @@ export function Lightbox() {
             <Section title="Cost">
               <div className="flex items-baseline justify-between gap-3">
                 <span className="text-[13px] text-fg">
-                  {usd != null ? (
+                  {gen.notSent ? (
+                    <span className="text-fg-muted">Not sent — nothing billed</span>
+                  ) : usd != null ? (
                     <>
                       <span className="font-mono">{formatUSD(usd)}</span>
-                      <span className="text-fg-subtle"> · {gen.credits} credits</span>
+                      <span className="text-fg-subtle"> charged · {charged} credits</span>
                     </>
                   ) : gen.estimateUSD != null ? (
                     <>

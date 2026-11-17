@@ -187,11 +187,18 @@ export function Composer() {
   );
   const unsupported = useMemo(() => (variant ? getUnsupportedRequired(variant) : []), [variant]);
 
-  // Input as it would be submitted; uploading media counted via preview URLs so cost reflects them.
+  // Input for the cost estimate: count every attached item (even while uploading).
   const input = useMemo(() => {
     if (!variant) return {};
     const urls: Record<string, string[]> = {};
     for (const m of media) (urls[m.field] ??= []).push(m.url ?? m.previewUrl);
+    return buildInput({ variant, prompt, params, media: urls });
+  }, [variant, prompt, params, media]);
+  // Input for "Copy as code": hosted URLs only — never local blob: previews.
+  const codeInput = useMemo(() => {
+    if (!variant) return {};
+    const urls: Record<string, string[]> = {};
+    for (const m of media) (urls[m.field] ??= []).push(m.url && !m.url.startsWith('blob:') ? m.url : `<uploading ${m.name}>`);
     return buildInput({ variant, prompt, params, media: urls });
   }, [variant, prompt, params, media]);
 
@@ -322,7 +329,7 @@ export function Composer() {
         size="lg"
       >
         <div className="px-5 pb-5">
-          <CodeTabs baseUrl={apiBase} model={variant.model} input={input} />
+          <CodeTabs baseUrl={apiBase} model={variant.model} input={codeInput} />
           <div className="mt-2 text-2xs text-fg-subtle">
             Local files you attached are uploaded first; their hosted URLs appear in the snippet once uploads finish.{' '}
             <Kbd>Esc</Kbd> to close.

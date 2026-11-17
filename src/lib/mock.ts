@@ -151,7 +151,11 @@ export function demoGenerations(apiBase: string): Generation[] {
   const image = (i: number) => [{ url: SAMPLE_IMAGES[i % SAMPLE_IMAGES.length], type: 'image' as const }];
 
   const runningId = 'mock_demo_running';
-  tasks[runningId] = { createdAt: now - 6000, model: 'seedance-2.5-flash', input: { prompt: 'running' } };
+  tasks[runningId] = {
+    createdAt: now - 6000,
+    model: 'seedance-2.5-flash',
+    input: { prompt: 'Slow dolly through a rain-soaked neon alley, a fox pauses under a paper lantern', duration: 5 },
+  };
   saveTasks(tasks);
 
   const list = [

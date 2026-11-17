@@ -174,7 +174,7 @@ function Failed({ gen }: { gen: Generation }) {
     <div className="absolute inset-0 flex flex-col bg-surface p-3">
       <div className="flex items-center gap-1.5 text-xs font-medium text-danger">
         <CircleAlert size={14} />
-        Failed
+        {gen.notSent ? 'Not sent — nothing billed' : 'Failed'}
       </div>
       <p className="mt-2 line-clamp-4 min-h-0 overflow-hidden text-xs leading-[17px] text-fg-muted">{gen.error || 'Generation failed.'}</p>
       <p className="mt-auto line-clamp-1 shrink-0 pt-2 text-2xs leading-4 text-fg-subtle">
@@ -197,11 +197,11 @@ function Failed({ gen }: { gen: Generation }) {
         </button>
         <button
           type="button"
-          aria-label="Delete"
+          aria-label={gen.notSent ? 'Dismiss' : 'Delete'}
           onClick={(e) => {
             e.stopPropagation();
             remove(gen.id);
-            toast.success('Deleted');
+            if (!gen.notSent) toast.success('Deleted');
           }}
           className="inline-flex size-7 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-danger-soft hover:text-danger"
         >

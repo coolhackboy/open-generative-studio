@@ -14,6 +14,8 @@ export const db = {
     }
   },
   put(gen: Generation): Promise<void> {
+    // Requests that never reached the provider are transient UI state only.
+    if (gen.status === 'submitting' || gen.notSent) return del(gen.id, store).catch(() => undefined);
     return set(gen.id, gen, store).catch(() => undefined);
   },
   remove(id: string): Promise<void> {

@@ -70,7 +70,7 @@ echo "$RES" | jq '.data.files // .data.error_message'
 
 export function jsSnippet({ baseUrl, model, input, keyEnvVar }: SnippetArgs): string {
   const payload = indent(JSON.stringify({ model, input }, null, 2), 2);
-  return `// Node 18+ (ESM) or any modern browser runtime
+  return `// Node 18+ — save as poyo.mjs and run: ${keyEnvVar}=... node poyo.mjs
 const API = "${baseUrl}";
 const headers = {
   Authorization: \`Bearer \${process.env.${keyEnvVar}}\`,

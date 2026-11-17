@@ -35,11 +35,22 @@ export interface ApiClient {
 
 export class ApiError extends Error {
   readonly code: number;
-  constructor(message: string, code: number) {
+  /** Seconds to wait before retrying (from a Retry-After header), when the server sent one. */
+  readonly retryAfter?: number;
+  constructor(message: string, code: number, retryAfter?: number) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
+    this.retryAfter = retryAfter;
   }
+}
+
+function parseRetryAfter(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const secs = Number(value);
+  if (Number.isFinite(secs)) return Math.max(0, secs);
+  const date = Date.parse(value);
+  return Number.isFinite(date) ? Math.max(0, (date - Date.now()) / 1000) : undefined;
 }
 
 const HINTS: Record<number, string> = {
@@ -81,14 +92,14 @@ function serverMessage(body: Envelope | null): string | undefined {
   return undefined;
 }
 
-function toError(httpStatus: number, body: Envelope | null): ApiError {
+function toError(httpStatus: number, body: Envelope | null, retryAfter?: number): ApiError {
   const code = typeof body?.code === 'number' && body.code !== 200 ? body.code : httpStatus;
   const hint = HINTS[code];
   const msg = serverMessage(body);
   const text = msg && hint && !msg.toLowerCase().includes(hint.toLowerCase().split(' ')[0])
     ? `${hint}: ${msg}`
     : (msg ?? hint ?? `Request failed (${code})`);
-  return new ApiError(text, code);
+  return new ApiError(text, code, retryAfter);
 }
 
 async function parse(res: Response): Promise<unknown> {
@@ -98,7 +109,8 @@ async function parse(res: Response): Promise<unknown> {
   } catch {
     body = null;
   }
-  if (!res.ok || !body || (typeof body.code === 'number' && body.code !== 200)) throw toError(res.status, body);
+  if (!res.ok || !body || (typeof body.code === 'number' && body.code !== 200))
+    throw toError(res.status, body, parseRetryAfter(res.headers.get('Retry-After')));
   return body.data;
 }
 
@@ -177,7 +189,7 @@ export function createPoyoClient(getAuth: () => { apiKey: string; baseUrl: strin
             body = null;
           }
           const ok = xhr.status >= 200 && xhr.status < 300 && body && (body.code == null || body.code === 200);
-          if (!ok) return reject(toError(xhr.status, body));
+          if (!ok) return reject(toError(xhr.status, body, parseRetryAfter(xhr.getResponseHeader('Retry-After'))));
           const d = (body?.data ?? {}) as { file_url?: string; url?: string; download_url?: string; expires_at?: string };
           const fileUrl = d.file_url ?? d.url ?? d.download_url;
           if (!fileUrl) return reject(new ApiError('Upload succeeded but no URL was returned', 500));

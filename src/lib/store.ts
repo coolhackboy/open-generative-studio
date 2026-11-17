@@ -123,6 +123,9 @@ interface ComposerState {
   params: Params;
   media: MediaItem[];
   submitting: boolean;
+  /** Last validation failure (field name); `nonce` retriggers the shake animation. */
+  invalid: { field: string; nonce: number } | null;
+  flagInvalid: (field: string | null) => void;
   setModel: (modelId: string, variant?: string) => void;
   setVariant: (variant: string) => void;
   setPrompt: (prompt: string) => void;
@@ -167,6 +170,8 @@ export const useComposer = create<ComposerState>((setState, getState) => ({
   params: {},
   media: [],
   submitting: false,
+  invalid: null,
+  flagInvalid: (field) => setState({ invalid: field ? { field, nonce: Date.now() } : null }),
 
   setModel: (modelId, variantId) => {
     const model = getModel(modelId);
@@ -196,17 +201,21 @@ export const useComposer = create<ComposerState>((setState, getState) => ({
     });
   },
 
-  setPrompt: (prompt) => setState({ prompt }),
+  setPrompt: (prompt) => setState({ prompt, invalid: getState().invalid?.field === 'prompt' ? null : getState().invalid }),
 
   setParam: (name, value) => {
     const params = { ...getState().params };
     if (value === undefined) delete params[name];
     else params[name] = value;
     local.setJSON(paramsKey(getState().variant), params);
-    setState({ params });
+    setState({ params, invalid: getState().invalid?.field === name ? null : getState().invalid });
   },
 
-  addMedia: (item) => setState({ media: [...getState().media, item] }),
+  addMedia: (item) =>
+    setState({
+      media: [...getState().media, item],
+      invalid: getState().invalid?.field === item.field ? null : getState().invalid,
+    }),
   updateMedia: (id, p) =>
     setState({ media: getState().media.map((m) => (m.id === id ? { ...m, ...p } : m)) }),
   removeMedia: (id) => {
@@ -231,7 +240,7 @@ export const useComposer = create<ComposerState>((setState, getState) => ({
           (u): u is string => typeof u === 'string' && /^https?:/.test(u) && !/example\.com/.test(u),
         );
         const fieldInfo = getMediaFields(variant, model.category).find((m) => m.name === k);
-        for (const url of urls)
+        for (const url of new Set(urls))
           media.push({
             id: uid(),
             field: k,
@@ -251,9 +260,40 @@ export const useComposer = create<ComposerState>((setState, getState) => ({
       prompt: typeof input.prompt === 'string' ? input.prompt : '',
       params: initialParams(variant, params),
       media,
+      invalid: null,
     });
   },
 }));
+
+// ---------------------------------------------------------------- draft persistence
+
+const KEY_DRAFT = 'ogs.draft';
+
+interface Draft {
+  modelId: string;
+  prompt: string;
+  media: Pick<MediaItem, 'field' | 'kind' | 'name' | 'url'>[];
+}
+
+let draftTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Persist the prompt and uploaded references so a reload doesn't lose work. */
+function watchDraft(): void {
+  useComposer.subscribe((s, prev) => {
+    if (s.prompt === prev.prompt && s.media === prev.media && s.modelId === prev.modelId) return;
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(() => {
+      const ready = s.media.filter((m) => m.status === 'ready' && m.url && /^https?:/.test(m.url));
+      if (!s.prompt.trim() && ready.length === 0) return local.remove(KEY_DRAFT);
+      const draft: Draft = {
+        modelId: s.modelId,
+        prompt: s.prompt,
+        media: ready.map((m) => ({ field: m.field, kind: m.kind, name: m.name, url: m.url })),
+      };
+      local.setJSON(KEY_DRAFT, draft);
+    }, 400);
+  });
+}
 
 /** Call once after `loadCatalog()` resolves: restores the last-used model and its params. */
 export function initComposer(): void {
@@ -261,7 +301,22 @@ export function initComposer(): void {
   const m = getModel(initial.modelId);
   if (!m) return;
   const v = getVariant(m, initial.variant);
-  useComposer.setState({ modelId: m.id, variant: v.model, params: initialParams(v, savedParams(v.model)) });
+  const draft = local.getJSON<Draft>(KEY_DRAFT);
+  const fields = new Set(getMediaFields(v, m.category).map((f) => f.name));
+  const media: MediaItem[] =
+    draft && draft.modelId === m.id
+      ? draft.media
+          .filter((d) => d.url && fields.has(d.field))
+          .map((d) => ({ ...d, id: uid(), previewUrl: d.url!, status: 'ready' as const, progress: 100 }))
+      : [];
+  useComposer.setState({
+    modelId: m.id,
+    variant: v.model,
+    params: initialParams(v, savedParams(v.model)),
+    prompt: draft?.prompt ?? '',
+    media,
+  });
+  watchDraft();
 }
 
 export function useCurrentModel(): { model: CatalogModel | undefined; variant: Variant | undefined } {

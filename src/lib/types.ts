@@ -41,6 +41,8 @@ export interface Generation {
   finishedAt?: number;
   apiBase: string;
   mock?: boolean;
+  /** The request never reached the provider (auth/validation/network error) — nothing was billed. Not persisted. */
+  notSent?: boolean;
 }
 
 export const TERMINAL: ReadonlySet<GenerationStatus> = new Set(['finished', 'failed']);

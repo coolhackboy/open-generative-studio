@@ -266,25 +266,32 @@ export function buildInput({ variant, prompt, params, media }: BuildArgs): Recor
   return input;
 }
 
+export interface Problem {
+  /** Input field the problem is about (prompt, a media field or a param). */
+  field: string;
+  message: string;
+}
+
 /** Client-side validation. Returns human-readable problems (empty = ok). */
-export function validateInput(variant: Variant, category: Category, input: Record<string, unknown>): string[] {
+export function validateInput(variant: Variant, category: Category, input: Record<string, unknown>): Problem[] {
   const { properties, required } = variant.schema;
-  const problems: string[] = [];
+  const problems: Problem[] = [];
+  const add = (field: string, message: string) => problems.push({ field, message });
   const mediaFields = new Map(getMediaFields(variant, category).map((m) => [m.name, m]));
 
   for (const name of required) {
     const v = input[name];
     const missing = v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0);
     if (!missing) continue;
-    if (name === PROMPT_FIELD) problems.push('Write a prompt first.');
+    if (name === PROMPT_FIELD) add(name, 'Write a prompt first.');
     else if (mediaFields.has(name)) {
       const m = mediaFields.get(name)!;
       const noun = m.kind === 'file' ? 'file' : m.kind;
       const count = m.min > 1 ? `at least ${m.min} ${noun}s` : `${/^[aeiou]/.test(noun) ? 'an' : 'a'} ${noun}`;
-      problems.push(`Add ${count} for “${m.label}”.`);
+      add(name, `Add ${count} for “${m.label}”.`);
     } else if (properties[name] && controlFor(properties[name]) === null) {
-      problems.push(`“${humanize(name)}” isn't editable here yet — use “Copy as code” to send it via the API.`);
-    } else problems.push(`“${humanize(name)}” is required.`);
+      add(name, `“${humanize(name)}” isn't editable here yet — use “Copy as code” to send it via the API.`);
+    } else add(name, `“${humanize(name)}” is required.`);
   }
 
   for (const [name, value] of Object.entries(input)) {
@@ -292,14 +299,14 @@ export function validateInput(variant: Variant, category: Category, input: Recor
     if (!f) continue;
     if (Array.isArray(value)) {
       const label = mediaFields.get(name)?.label ?? humanize(name);
-      if (f.minItems != null && value.length < f.minItems) problems.push(`“${label}” needs at least ${f.minItems}.`);
-      if (f.maxItems != null && value.length > f.maxItems) problems.push(`“${label}” allows at most ${f.maxItems}.`);
+      if (f.minItems != null && value.length < f.minItems) add(name, `“${label}” needs at least ${f.minItems}.`);
+      if (f.maxItems != null && value.length > f.maxItems) add(name, `“${label}” allows at most ${f.maxItems}.`);
     } else if (typeof value === 'number') {
-      if (f.minimum != null && value < f.minimum) problems.push(`“${humanize(name)}” must be ≥ ${f.minimum}.`);
-      if (f.maximum != null && value > f.maximum) problems.push(`“${humanize(name)}” must be ≤ ${f.maximum}.`);
+      if (f.minimum != null && value < f.minimum) add(name, `“${humanize(name)}” must be ≥ ${f.minimum}.`);
+      if (f.maximum != null && value > f.maximum) add(name, `“${humanize(name)}” must be ≤ ${f.maximum}.`);
     } else if (typeof value === 'string') {
       if (f.maxLength != null && value.length > f.maxLength)
-        problems.push(`“${humanize(name)}” is too long (max ${f.maxLength.toLocaleString()} characters).`);
+        add(name, `“${humanize(name)}” is too long (max ${f.maxLength.toLocaleString()} characters).`);
     }
   }
   return problems;

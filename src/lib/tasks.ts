@@ -2,16 +2,48 @@ import { findVariant, getModel, getVariant } from '../data/catalog';
 import { toast } from '../ui/toast';
 import { api, ApiError, MOCK_MODE } from './api';
 import { estimateCost } from './cost';
+import { local } from './db';
 import { uid } from './format';
 import { buildInput, estimateAspect, getMediaFields, validateInput, type MediaKind } from './schema';
 import { useComposer, useGallery, useSettings, useUI, type MediaItem } from './store';
 import { isTerminal, type Generation } from './types';
+
+// ---------------------------------------------------------------- completion listeners
+
+type FinishListener = (gen: Generation) => void;
+const finishListeners = new Set<FinishListener>();
+
+/** Subscribe to generations reaching `finished` (used for title badge, notifications, motion). */
+export function onFinished(fn: FinishListener): () => void {
+  finishListeners.add(fn);
+  return () => finishListeners.delete(fn);
+}
+
+// ---------------------------------------------------------------- ETA history (this device)
+
+const DURATIONS_KEY = 'ogs.durations';
+
+function recordDuration(variant: string, ms: number): void {
+  if (!(ms > 0)) return;
+  const all = local.getJSON<Record<string, number[]>>(DURATIONS_KEY) ?? {};
+  all[variant] = [...(all[variant] ?? []), Math.round(ms)].slice(-8);
+  local.setJSON(DURATIONS_KEY, all);
+}
+
+/** Median duration of past successful runs of this variant on this device, if any. */
+export function etaFor(variant: string): number | undefined {
+  const list = local.getJSON<Record<string, number[]>>(DURATIONS_KEY)?.[variant];
+  if (!list?.length) return undefined;
+  const sorted = [...list].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
 
 // ---------------------------------------------------------------- polling
 
 const FAST_MS = 3000;
 const SLOW_MS = 8000;
 const SLOW_AFTER_MS = 60_000;
+const MAX_BACKOFF_MS = 60_000;
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 const failures = new Map<string, number>();
 
@@ -20,9 +52,12 @@ function schedule(id: string, ms: number): void {
   timers.set(id, setTimeout(() => void tick(id), ms));
 }
 
-function nextDelay(gen: Generation): number {
+const jitter = (min: number, max: number) => min + Math.random() * (max - min);
+
+function nextDelay(gen: Generation, retryAfterSec?: number): number {
   const errs = failures.get(gen.id) ?? 0;
-  if (errs > 0) return Math.min(30_000, SLOW_MS * 2 ** (errs - 1));
+  if (retryAfterSec != null) return Math.min(MAX_BACKOFF_MS, retryAfterSec * 1000 + jitter(250, 1500));
+  if (errs > 0) return Math.min(MAX_BACKOFF_MS, SLOW_MS * 2 ** (errs - 1) + jitter(0, 1000));
   return Date.now() - gen.createdAt > SLOW_AFTER_MS ? SLOW_MS : FAST_MS;
 }
 
@@ -37,7 +72,8 @@ async function tick(id: string): Promise<void> {
       status: s.status,
       progress: s.status === 'finished' ? 100 : Math.max(gen.progress, s.progress),
     };
-    if (s.credits != null) patch.credits = s.credits;
+    // Some models report 0 credits until the task is done; only record meaningful values.
+    if (s.credits != null && (s.credits > 0 || s.status === 'finished')) patch.credits = s.credits;
     if (s.status === 'finished') {
       patch.files = s.files;
       patch.finishedAt = Date.now();
@@ -51,15 +87,21 @@ async function tick(id: string): Promise<void> {
       patch.finishedAt = Date.now();
     }
     useGallery.getState().patch(id, patch);
+    if (patch.status === 'finished') {
+      recordDuration(gen.variant, (patch.finishedAt ?? Date.now()) - gen.createdAt);
+      const done = useGallery.getState().items.find((g) => g.id === id);
+      if (done) finishListeners.forEach((fn) => fn(done));
+    }
     if (!isTerminal(patch.status ?? gen.status)) schedule(id, nextDelay(gen));
   } catch (e) {
-    // Auth / not-found errors are final; network or 5xx errors keep retrying with backoff.
+    // Auth / not-found errors are final; rate limits, network and 5xx errors back off and retry.
     if (e instanceof ApiError && (e.code === 401 || e.code === 403 || e.code === 404)) {
       useGallery.getState().patch(id, { status: 'failed', error: e.message });
       return;
     }
     failures.set(id, (failures.get(id) ?? 0) + 1);
-    schedule(id, nextDelay(gen));
+    const retryAfter = e instanceof ApiError && e.code === 429 ? (e.retryAfter ?? undefined) : undefined;
+    schedule(id, nextDelay(gen, retryAfter));
   }
 }
 
@@ -68,15 +110,13 @@ export function track(id: string): void {
   schedule(id, FAST_MS);
 }
 
-/** On startup: resume polling for unfinished tasks; fail ones interrupted before submit. */
+/** On startup: resume polling for unfinished tasks (staggered so many tabs/tasks don't burst). */
 export function resumeAll(items: Generation[]): void {
+  let i = 0;
   for (const g of items) {
     if (isTerminal(g.status)) continue;
-    if (g.taskId) schedule(g.id, 300);
-    else
-      useGallery
-        .getState()
-        .patch(g.id, { status: 'failed', error: 'Interrupted before the task was submitted. Retry to send it again.' });
+    if (g.taskId) schedule(g.id, jitter(1500, 3000) + i++ * 400);
+    else useGallery.getState().remove(g.id); // interrupted before submission — nothing was sent
   }
 }
 
@@ -95,13 +135,14 @@ async function submitGeneration(gen: Generation): Promise<boolean> {
   upsert(gen);
   try {
     const r = await api.submit(gen.variant, gen.input);
-    patch(gen.id, { taskId: r.taskId, status: r.status });
+    patch(gen.id, { taskId: r.taskId, status: r.status, notSent: undefined });
     track(gen.id);
     return true;
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Request failed';
-    patch(gen.id, { status: 'failed', error: message });
-    toast.show({ title: 'Generation not started', description: message, tone: 'danger' });
+    // The provider rejected (or never received) the request: nothing was billed, so don't keep an estimate.
+    patch(gen.id, { status: 'failed', error: message, notSent: true, estimateUSD: undefined });
+    toast.show({ title: 'Not sent — nothing billed', description: message, tone: 'danger' });
     if (e instanceof ApiError && e.code === 401) useUI.getState().setSettingsOpen(true);
     return false;
   }
@@ -130,7 +171,15 @@ export async function generate(): Promise<void> {
 
   const problems = validateInput(variant, model.category, input);
   if (problems.length) {
-    toast.show({ title: problems[0], description: problems.slice(1).join(' '), tone: 'danger' });
+    c.flagInvalid(problems[0].field);
+    toast.show({
+      title: problems[0].message,
+      description: problems
+        .slice(1)
+        .map((p) => p.message)
+        .join(' '),
+      tone: 'danger',
+    });
     return;
   }
   if (needsKey()) return;
@@ -169,6 +218,7 @@ export async function retry(id: string): Promise<void> {
   const old = useGallery.getState().items.find((g) => g.id === id);
   if (!old || needsKey()) return;
   const now = Date.now();
+  const found = findVariant(old.variant);
   await submitGeneration({
     ...old,
     taskId: undefined,
@@ -176,8 +226,10 @@ export async function retry(id: string): Promise<void> {
     progress: 0,
     files: [],
     error: undefined,
+    notSent: undefined,
     credits: undefined,
     finishedAt: undefined,
+    estimateUSD: found ? estimateCost(found.variant, old.input)?.usd : old.estimateUSD,
     createdAt: now,
     updatedAt: now,
     apiBase: useSettings.getState().apiBase,
@@ -234,6 +286,10 @@ export function addFiles(files: File[] | FileList, targetField?: string): void {
       continue;
     }
     const media = useComposer.getState().media;
+    if (media.some((m) => m.file && m.file.name === file.name && m.file.size === file.size)) {
+      toast.show({ title: `${file.name} is already attached`, tone: 'info' }, 2500);
+      continue;
+    }
     const used = (name: string) => media.filter((m) => m.field === name).length;
     const field = targetField
       ? fields.find((f) => f.name === targetField && used(f.name) < f.max)
@@ -263,6 +319,31 @@ export function addFiles(files: File[] | FileList, targetField?: string): void {
   }
 }
 
+/** Attach an already-hosted URL (e.g. a previous output) as a reference. */
+export function addRemoteReference(url: string, kind: MediaKind, targetField?: string): boolean {
+  const c = useComposer.getState();
+  const model = getModel(c.modelId);
+  if (!model) return false;
+  const fields = getMediaFields(getVariant(model, c.variant), model.category);
+  if (c.media.some((m) => m.url === url)) return true;
+  const used = (name: string) => c.media.filter((m) => m.field === name).length;
+  const field = targetField
+    ? fields.find((f) => f.name === targetField)
+    : fields.find((f) => (f.kind === kind || f.kind === 'file') && used(f.name) < f.max);
+  if (!field) return false;
+  c.addMedia({
+    id: uid(),
+    field: field.name,
+    kind,
+    name: url.split('/').pop()?.split('?')[0] ?? 'reference',
+    previewUrl: url,
+    url,
+    status: 'ready',
+    progress: 100,
+  });
+  return true;
+}
+
 async function uploadItem(item: MediaItem): Promise<void> {
   const { addMedia, updateMedia } = useComposer.getState();
   addMedia(item);
@@ -275,7 +356,14 @@ async function uploadItem(item: MediaItem): Promise<void> {
     const res = await api.upload(item.file!, (progress) => updateMedia(item.id, { progress }));
     updateMedia(item.id, { status: 'ready', url: res.url, progress: 100 });
   } catch (e) {
-    updateMedia(item.id, { status: 'error', error: e instanceof Error ? e.message : 'Upload failed' });
+    const message = e instanceof Error ? e.message : 'Upload failed';
+    updateMedia(item.id, { status: 'error', error: message });
+    toast.show({
+      title: `Couldn't upload ${item.name}`,
+      description: message,
+      tone: 'danger',
+      action: { label: 'Retry upload', onClick: () => retryUpload(item.id) },
+    });
   }
 }
 
