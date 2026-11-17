@@ -58,7 +58,11 @@ export function Dialog({
     const raf = requestAnimationFrame(() => {
       const panel = panelRef.current;
       if (!panel) return;
-      const target = panel.querySelector<HTMLElement>('[data-autofocus]') ?? focusables(panel)[0] ?? panel;
+      const visible = (el: HTMLElement) => el.getClientRects().length > 0;
+      const target =
+        Array.from(panel.querySelectorAll<HTMLElement>('[data-autofocus]')).find(visible) ??
+        focusables(panel)[0] ??
+        panel;
       target.focus({ preventScroll: true });
     });
     return () => {
@@ -71,17 +75,15 @@ export function Dialog({
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'Tab' || !panelRef.current) return;
+    // Robust trap: move focus ourselves so nothing (e.g. scroll containers Chrome makes
+    // focusable) can let it escape the dialog.
     const els = focusables(panelRef.current);
-    if (els.length === 0) return;
-    const first = els[0];
-    const last = els[els.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
+    e.preventDefault();
+    if (els.length === 0) return panelRef.current.focus();
+    const idx = els.indexOf(document.activeElement as HTMLElement);
+    const next =
+      idx === -1 ? (e.shiftKey ? els.length - 1 : 0) : (idx + (e.shiftKey ? -1 : 1) + els.length) % els.length;
+    els[next].focus();
   };
 
   return createPortal(
@@ -102,7 +104,7 @@ export function Dialog({
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            aria-describedby={description ? descId : undefined}
+            aria-describedby={description && !hideHeader ? descId : undefined}
             tabIndex={-1}
             onKeyDown={onKeyDown}
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
@@ -117,26 +119,32 @@ export function Dialog({
               className,
             )}
           >
-            <div className={cn('flex items-start gap-4 px-5 pt-5 pb-3', hideHeader && 'sr-only')}>
-              <div className="min-w-0 flex-1">
-                <h2 id={titleId} className="text-[15px] font-semibold tracking-[-0.01em] text-fg">
-                  {title}
-                </h2>
-                {description && (
-                  <p id={descId} className="mt-1 text-[13px] leading-5 text-fg-muted">
-                    {description}
-                  </p>
-                )}
+            {hideHeader ? (
+              <h2 id={titleId} className="sr-only">
+                {title}
+              </h2>
+            ) : (
+              <div className="flex items-start gap-4 px-5 pt-5 pb-3">
+                <div className="min-w-0 flex-1">
+                  <h2 id={titleId} className="text-[15px] leading-6 font-semibold tracking-[-0.01em] text-fg">
+                    {title}
+                  </h2>
+                  {description && (
+                    <p id={descId} className="mt-1 text-[13px] leading-5 text-fg-muted">
+                      {description}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close"
+                  className="-mt-1 -mr-1 inline-flex size-9 items-center justify-center rounded-sm text-fg-muted hover:bg-surface-2 hover:text-fg"
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close"
-                className="-mt-1 -mr-1 inline-flex size-8 items-center justify-center rounded-sm text-fg-muted hover:bg-surface-2 hover:text-fg"
-              >
-                <X size={16} />
-              </button>
-            </div>
+            )}
             {children}
           </motion.div>
         </div>

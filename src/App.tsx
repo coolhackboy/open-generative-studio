@@ -26,7 +26,8 @@ function useGlobalHotkeys() {
         return;
       }
       if (mod && e.key === 'Enter') {
-        if (ui.paletteOpen || ui.settingsOpen) return;
+        // Never generate from behind a dialog, popover or lightbox.
+        if (hasOpenLayer() || ui.lightboxId) return;
         e.preventDefault();
         void generate();
         return;

@@ -1,0 +1,426 @@
+{
+  "$comment": "Showcase wall. Items are real outputs published by PoYo. `input`/`credits` are set only when the exact request is known. Override with VITE_SHOWCASE_URL.",
+  "version": 1,
+  "items": [
+    {
+      "id": "launch-ceramicist-hands",
+      "model": "seedance-2-5-flash",
+      "variant": "seedance-2.5-flash",
+      "type": "video",
+      "src": "showcase/seedance-2-5-flash-ceramicist-hands.mp4",
+      "poster": "showcase/seedance-2-5-flash-ceramicist-hands.webp",
+      "alt": "Close-up of a ceramicist's hands shaping wet clay on a spinning pottery wheel. Warm golden window light from the side, dust particles floating in the air, water glistening on the clay as the fingers press inward and the bowl rises and widens. Shallow depth of field, slow push-in, the same pair of hands and the same bowl throughout. Sound: the soft whir of the wheel, wet clay squelching, quiet studio ambience. No music, no subtitles, no on-screen text.",
+      "input": {
+        "prompt": "Close-up of a ceramicist's hands shaping wet clay on a spinning pottery wheel. Warm golden window light from the side, dust particles floating in the air, water glistening on the clay as the fingers press inward and the bowl rises and widens. Shallow depth of field, slow push-in, the same pair of hands and the same bowl throughout. Sound: the soft whir of the wheel, wet clay squelching, quiet studio ambience. No music, no subtitles, no on-screen text.",
+        "duration": 5,
+        "resolution": "720p",
+        "aspect_ratio": "16:9",
+        "generate_audio": true
+      },
+      "credits": 205,
+      "source": "Generated on PoYo for the Seedance 2.5 Flash launch",
+      "aspect": 1.778
+    },
+    {
+      "id": "launch-red-car-rain",
+      "model": "seedance-2-5-flash",
+      "variant": "seedance-2.5-flash",
+      "type": "video",
+      "src": "showcase/seedance-2-5-flash-red-car-rain.mp4",
+      "poster": "showcase/seedance-2-5-flash-red-car-rain.webp",
+      "alt": "Tracking shot alongside a red sports car carving through a winding mountain road in heavy rain. The camera keeps pace beside the car as it leans into a tight curve, spray rising from the tires, rain streaking past, headlights cutting through low clouds, dark pine forest and wet asphalt reflecting the light. The same red car stays sharp and consistent throughout. Sound: engine roar rising through the gears, tires hissing on wet asphalt, steady rain. No subtitles, no on-screen text.",
+      "input": {
+        "prompt": "Tracking shot alongside a red sports car carving through a winding mountain road in heavy rain. The camera keeps pace beside the car as it leans into a tight curve, spray rising from the tires, rain streaking past, headlights cutting through low clouds, dark pine forest and wet asphalt reflecting the light. The same red car stays sharp and consistent throughout. Sound: engine roar rising through the gears, tires hissing on wet asphalt, steady rain. No subtitles, no on-screen text.",
+        "duration": 5,
+        "resolution": "720p",
+        "aspect_ratio": "16:9",
+        "generate_audio": true
+      },
+      "credits": 205,
+      "source": "Generated on PoYo for the Seedance 2.5 Flash launch",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-seedance-2-5-flash-0",
+      "model": "seedance-2-5-flash",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/seedance-2-5-flash/media/thirty-second-timestamp-story-720p-1cca18e01872.mp4",
+      "poster": "https://storage.poyo.ai/models/seedance-2-5-flash/media/thirty-second-timestamp-story-720p-poster-d2e5bdab9070.webp",
+      "alt": "A 30-second Seedance 2.5 Flash video in five timed shots: a harbor at dawn, a cyclist in a yellow raincoat at a fish market, a stone staircase, a letter handed over at a blue door, and an elderly man reading it.",
+      "source": "PoYo model page: https://poyo.ai/models/seedance-2-5-flash",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-mai-image-2-6-16",
+      "model": "mai-image-2-6",
+      "type": "image",
+      "src": "https://storage.poyo.ai/models/mai-image-2-6/features/official-photorealism-83d708ed5cf8.webp",
+      "alt": "Official MAI Image 2.6 sample from Microsoft: a motion-blurred tennis player running across a green court, with a racket in the foreground",
+      "source": "PoYo model page: https://poyo.ai/models/mai-image-2-6",
+      "aspect": 1.753
+    },
+    {
+      "id": "landing-seedance-2-5-flash-1",
+      "model": "seedance-2-5-flash",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/seedance-2-5-flash/media/synchronized-audio-greenhouse-dialogue-5559a155f14d.mp4",
+      "poster": "https://storage.poyo.ai/models/seedance-2-5-flash/media/synchronized-audio-greenhouse-dialogue-poster-01524c30853b.webp",
+      "alt": "A Seedance 2.5 Flash clip with generated dialogue: a man and a woman talk in a glass greenhouse while she holds a glowing flower.",
+      "source": "PoYo model page: https://poyo.ai/models/seedance-2-5-flash",
+      "aspect": 1.793
+    },
+    {
+      "id": "landing-mai-image-2-6-21",
+      "model": "mai-image-2-6",
+      "type": "image",
+      "src": "https://storage.poyo.ai/models/mai-image-2-6/features/official-web-grounding-e8b655ed0535.webp",
+      "alt": "Official MAI Image 2.6 web grounding example from Microsoft: the Metrópolis Building with its dark dome and gilded details at a sunny intersection in Madrid",
+      "source": "PoYo model page: https://poyo.ai/models/mai-image-2-6",
+      "aspect": 1.157
+    },
+    {
+      "id": "landing-gemini-omni-1-2-flash-22",
+      "model": "gemini-omni-1-2-flash",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/gemini-omni-1-2-flash/features/duration-15s-8683da3c0217.mp4",
+      "poster": "https://storage.poyo.ai/models/gemini-omni-1-2-flash/features/duration-15s-poster-19eeeaaf8b90.webp",
+      "alt": "A 15-second, four-shot macro explainer filmed inside a beehive with animated callouts",
+      "source": "PoYo model page: https://poyo.ai/models/gemini-omni-1-2-flash",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-flux-3-klein-49",
+      "model": "flux-3-klein",
+      "type": "image",
+      "src": "https://storage.poyo.ai/models/flux-3-klein/features/1744d4135782e2bdd8d418875f86cca6e21b9afb820f5bedab758d294877800b.webp",
+      "alt": "FLUX 3 Image Klein woodblock-style illustration of a lantern keeper beside storm waves",
+      "source": "PoYo model page: https://poyo.ai/models/flux-3-klein",
+      "aspect": 0.75
+    },
+    {
+      "id": "landing-gemini-omni-1-2-flash-23",
+      "model": "gemini-omni-1-2-flash",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/gemini-omni-1-2-flash/features/first-last-frames-aaffa86686db.mp4",
+      "poster": "https://storage.poyo.ai/models/gemini-omni-1-2-flash/features/first-last-frames-poster-822b2545682f.webp",
+      "alt": "An exterior ramen shop start frame and an interior diner end frame joined by one continuous camera push",
+      "source": "PoYo model page: https://poyo.ai/models/gemini-omni-1-2-flash",
+      "aspect": 1.056
+    },
+    {
+      "id": "landing-flux-3-klein-51",
+      "model": "flux-3-klein",
+      "type": "image",
+      "src": "https://storage.poyo.ai/models/flux-3-klein/features/96587fc4fffcec0aaeb2236b2e3da69d8555681656769a767175d81f7bfc0935.webp",
+      "alt": "Square cat postage-stamp illustration with its full composition preserved",
+      "source": "PoYo model page: https://poyo.ai/models/flux-3-klein",
+      "aspect": 1
+    },
+    {
+      "id": "landing-pixverse-v6-max-40",
+      "model": "pixverse-v6-max",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/pixverse-v6-max/features/dialogue-lip-sync-bee33a95cb96fb65.mp4",
+      "poster": "https://storage.poyo.ai/models/pixverse-v6-max/features/dialogue-lip-sync-poster-4a78a06bba3bf177.webp",
+      "alt": "A detective in a trench coat and a young woman in a yellow raincoat talk in a rainy diner at night",
+      "source": "PoYo model page: https://poyo.ai/models/pixverse-v6-max",
+      "aspect": 1.791
+    },
+    {
+      "id": "landing-seedream-5-0-flash-71",
+      "model": "seedream-5-0-flash",
+      "type": "image",
+      "src": "https://storage.poyo.ai/models/seedream-5-0-flash/features/forest-showcase.webp",
+      "alt": "Forest creek after rain with a close-up of actual moss textures",
+      "source": "PoYo model page: https://poyo.ai/models/seedream-5-0-flash",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-pixverse-v6-max-41",
+      "model": "pixverse-v6-max",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/pixverse-v6-max/features/product-text-beat-b886b7f0663f5c3f.mp4",
+      "poster": "https://storage.poyo.ai/models/pixverse-v6-max/features/product-text-beat-poster-9d17b986b00c73ef.webp",
+      "alt": "A white running shoe with an orange stripe and the word AERO on the heel, on a glossy pedestal and a rooftop at dawn",
+      "source": "PoYo model page: https://poyo.ai/models/pixverse-v6-max",
+      "aspect": 1.791
+    },
+    {
+      "id": "landing-grok-imagine-image-2-111",
+      "model": "grok-imagine-image-2",
+      "type": "image",
+      "src": "https://storage.poyo.ai/models/grok-imagine-image-2/examples/multi-reference-output-78fecc85071d.webp",
+      "alt": "Multiple visual references blended into one consistent explorer and observatory scene",
+      "source": "PoYo model page: https://poyo.ai/models/grok-imagine-image-2",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-pixverse-v6-max-42",
+      "model": "pixverse-v6-max",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/pixverse-v6-max/features/image-to-video-4bf077a52907f1f1.mp4",
+      "poster": "https://storage.poyo.ai/models/pixverse-v6-max/features/image-to-video-poster-30e2cef579d54a27.webp",
+      "alt": "A chilled glass bottle of lemonade with lemon halves and mint on a limestone ledge above a turquoise sea, as the camera slowly pushes in",
+      "source": "PoYo model page: https://poyo.ai/models/pixverse-v6-max",
+      "aspect": 1.791
+    },
+    {
+      "id": "landing-seedream-5-0-pro-125",
+      "model": "seedream-5-0-pro",
+      "type": "image",
+      "src": "https://storage.poyo.ai/models/seedream-5-0-pro/examples/text-to-image-output.png?v=20260709",
+      "alt": "Seedream 5.0 Pro sample output",
+      "source": "PoYo model page: https://poyo.ai/models/seedream-5-0-pro",
+      "aspect": 0.748
+    },
+    {
+      "id": "landing-kling-4-0-47",
+      "model": "kling-4-0",
+      "type": "video",
+      "src": "https://storage.poyo.ai/kling-4-0/feature-5-715bdf609fa1.mp4",
+      "poster": "https://storage.poyo.ai/kling-4-0/poster-2dbf0beb028a.webp",
+      "alt": "Shape Natural Camera Movement with Director-Style Instructions",
+      "source": "PoYo model page: https://poyo.ai/models/kling-4-0",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-seedream-5-0-pro-126",
+      "model": "seedream-5-0-pro",
+      "type": "image",
+      "src": "https://storage.poyo.ai/models/seedream-5-0-pro/examples/edit-output.png?v=20260709",
+      "alt": "Seedream 5.0 Pro sample output",
+      "source": "PoYo model page: https://poyo.ai/models/seedream-5-0-pro",
+      "aspect": 0.752
+    },
+    {
+      "id": "landing-flux-3-max-53",
+      "model": "flux-3-max",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/flux-3-max/features/2d2048e96f6bdec8d3ecaf6e23444ec81e5e7669fe438fa65f8271d231bfddda.mp4",
+      "poster": "https://storage.poyo.ai/models/flux-3-max/features/5e4b336360722905f1eb3f7efb29082cdea40b01cb85663dec42b670e40d1dc6.webp",
+      "alt": "Cowboy watching a rocket land beside a frontier ranch",
+      "source": "PoYo model page: https://poyo.ai/models/flux-3-max",
+      "aspect": 1.818
+    },
+    {
+      "id": "landing-kling-o3-image-157",
+      "model": "kling-o3-image",
+      "type": "image",
+      "src": "https://storage.poyo.ai/kling-o3-image/mnsmr7ct_9lkp5yyb25s.webp",
+      "alt": "Kling O3 Image sample output",
+      "source": "PoYo model page: https://poyo.ai/models/kling-o3-image",
+      "aspect": 1.792
+    },
+    {
+      "id": "landing-flux-3-max-54",
+      "model": "flux-3-max",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/flux-3-max/features/a851e491258fae2da2688c24d951e652256c2cd2dfa5d0bdc872be2be54a2541.mp4",
+      "poster": "https://storage.poyo.ai/models/flux-3-max/features/de6cc10c67984c2f2b03a65b1e5bd559b73df20332b282976bb03f8ee6a80dbd.webp",
+      "alt": "Woman in a Western hat approaching the camera and raising her hat brim",
+      "source": "PoYo model page: https://poyo.ai/models/flux-3-max",
+      "aspect": 1.818
+    },
+    {
+      "id": "landing-kling-o3-image-158",
+      "model": "kling-o3-image",
+      "type": "image",
+      "src": "https://storage.poyo.ai/kling-o3-image/mnsmr6kl_sx6bhgcu9gg.webp",
+      "alt": "Kling O3 Image sample output",
+      "source": "PoYo model page: https://poyo.ai/models/kling-o3-image",
+      "aspect": 1.78
+    },
+    {
+      "id": "landing-vidu-q4-57",
+      "model": "vidu-q4",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/vidu-q4/features/q4-showcase.mp4",
+      "poster": "https://storage.poyo.ai/models/vidu-q4/features/q4-showcase-poster.webp",
+      "alt": "Official Vidu Q4 sample of a cinematic close-up of a musician playing guitar with detailed hands and strings",
+      "source": "PoYo model page: https://poyo.ai/models/vidu-q4",
+      "aspect": 1
+    },
+    {
+      "id": "landing-kling-o3-image-160",
+      "model": "kling-o3-image",
+      "type": "image",
+      "src": "https://storage.poyo.ai/kling-o3-image/mnsmr6d0_9tdg7ncwg9.webp",
+      "alt": "Kling O3 Image sample output",
+      "source": "PoYo model page: https://poyo.ai/models/kling-o3-image",
+      "aspect": 1
+    },
+    {
+      "id": "landing-vidu-q4-58",
+      "model": "vidu-q4",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/vidu-q4/features/reference-character.mp4",
+      "poster": "https://storage.poyo.ai/models/vidu-q4/features/reference-character-poster.webp",
+      "alt": "Official Vidu Q4 sample of a consistent character in a cinematic close-up across camera movement",
+      "source": "PoYo model page: https://poyo.ai/models/vidu-q4",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-kling-o1-image-163",
+      "model": "kling-o1-image",
+      "type": "image",
+      "src": "https://storage.poyo.ai/kling-o1-image/mnr7ufmh_1zviambi3gu.webp",
+      "alt": "Kling O1 Image sample output",
+      "source": "PoYo model page: https://poyo.ai/models/kling-o1-image",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-vidu-q4-59",
+      "model": "vidu-q4",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/vidu-q4/features/action-scene.mp4",
+      "poster": "https://storage.poyo.ai/models/vidu-q4/features/action-scene-poster.webp",
+      "alt": "Official Vidu Q4 sample of a large-scale battle scene with fast action and dramatic camera movement",
+      "source": "PoYo model page: https://poyo.ai/models/vidu-q4",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-seedream-5-0-lite-api-195",
+      "model": "seedream-5-0-lite-api",
+      "type": "image",
+      "src": "https://storage.poyo.ai/seedream-5-0-lite-api/mm4mf32u_1q4p9fewhqi.webp",
+      "alt": "Seedream 5.0 Lite sample output",
+      "source": "PoYo model page: https://poyo.ai/models/seedream-5-0-lite-api",
+      "aspect": 1
+    },
+    {
+      "id": "landing-omnihuman-2-0-64",
+      "model": "omnihuman-2-0",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/omnihuman-2-0/features/animal-character.mp4",
+      "poster": "https://storage.poyo.ai/models/omnihuman-2-0/features/animal-character-poster.webp",
+      "alt": "Official OmniHuman 2.0 sample of a stylized raccoon character talking with expressive facial motion",
+      "source": "PoYo model page: https://poyo.ai/models/omnihuman-2-0",
+      "aspect": 0.75
+    },
+    {
+      "id": "landing-grok-imagine-image-quality-226",
+      "model": "grok-imagine-image-quality",
+      "type": "image",
+      "src": "https://storage.poyo.ai/grok-imagine-image-quality/examples/modern-hillside-house.webp",
+      "alt": "Modern hillside house generated image example",
+      "source": "PoYo model page: https://poyo.ai/models/grok-imagine-image-quality",
+      "aspect": 1.339
+    },
+    {
+      "id": "landing-minimax-h3-max-79",
+      "model": "minimax-h3-max",
+      "type": "video",
+      "src": "https://storage.poyo.ai/minimax-h3-max/example-output-20260924-cinema-v1-max-feature-1.mp4",
+      "poster": "https://storage.poyo.ai/minimax-h3-max/example-poster-20260924-cinema-v1-max-feature-1.jpg",
+      "alt": "The Last Signal",
+      "source": "PoYo model page: https://poyo.ai/models/minimax-h3-max",
+      "aspect": 1.75
+    },
+    {
+      "id": "landing-grok-imagine-image-quality-227",
+      "model": "grok-imagine-image-quality",
+      "type": "image",
+      "src": "https://storage.poyo.ai/grok-imagine-image-quality/examples/cinematic-knight-visor.webp",
+      "alt": "Cinematic knight visor generated image example",
+      "source": "PoYo model page: https://poyo.ai/models/grok-imagine-image-quality",
+      "aspect": 1.333
+    },
+    {
+      "id": "landing-minimax-h3-max-82",
+      "model": "minimax-h3-max",
+      "type": "video",
+      "src": "https://storage.poyo.ai/minimax-h3-max/example-output-20260924-cinema-v1-max-feature-4.mp4",
+      "poster": "https://storage.poyo.ai/minimax-h3-max/example-poster-20260924-cinema-v1-max-feature-4.jpg",
+      "alt": "Homeward",
+      "source": "PoYo model page: https://poyo.ai/models/minimax-h3-max",
+      "aspect": 1.75
+    },
+    {
+      "id": "landing-flux-dev-230",
+      "model": "flux-dev",
+      "type": "image",
+      "src": "https://storage.poyo.ai/flux-2/examples/flex-edit-gradient-vase.png",
+      "alt": "Flux Dev image editing example",
+      "source": "PoYo model page: https://poyo.ai/models/flux-dev",
+      "aspect": 1.333
+    },
+    {
+      "id": "landing-wan-3-0-101",
+      "model": "wan-3-0",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/wan-3-0/examples/feature-multimodal-context-output-v1.mp4",
+      "poster": "https://storage.poyo.ai/models/wan-3-0/examples/feature-multimodal-context-poster-v1.webp",
+      "alt": "Wan 3.0 video showing multimodal references combined in one cinematic scene",
+      "source": "PoYo model page: https://poyo.ai/models/wan-3-0",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-flux-dev-231",
+      "model": "flux-dev",
+      "type": "image",
+      "src": "https://storage.poyo.ai/flux-2/examples/pro-edit-coffee-flames.png",
+      "alt": "Flux Dev product-style image generation example",
+      "source": "PoYo model page: https://poyo.ai/models/flux-dev",
+      "aspect": 1.333
+    },
+    {
+      "id": "landing-wan-3-0-102",
+      "model": "wan-3-0",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/wan-3-0/examples/feature-30-second-story-output-v1.mp4",
+      "poster": "https://storage.poyo.ai/models/wan-3-0/examples/feature-30-second-story-poster-v1.webp",
+      "alt": "Wan 3.0 video showing a consistent subject through a continuous cinematic move",
+      "source": "PoYo model page: https://poyo.ai/models/wan-3-0",
+      "aspect": 1.733
+    },
+    {
+      "id": "landing-flux-schnell-232",
+      "model": "flux-schnell",
+      "type": "image",
+      "src": "https://storage.poyo.ai/flux-2/examples/flex-monster-donut.png",
+      "alt": "Flux Schnell fast image generation example",
+      "source": "PoYo model page: https://poyo.ai/models/flux-schnell",
+      "aspect": 1.333
+    },
+    {
+      "id": "landing-wan-3-0-103",
+      "model": "wan-3-0",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/wan-3-0/examples/feature-edit-and-extend-output-v1.mp4",
+      "poster": "https://storage.poyo.ai/models/wan-3-0/examples/feature-edit-and-extend-poster-v1.webp",
+      "alt": "Wan 3.0 video showing a controlled scene edit while the subject stays stable",
+      "source": "PoYo model page: https://poyo.ai/models/wan-3-0",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-wan-3-0-104",
+      "model": "wan-3-0",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/wan-3-0/examples/feature-native-audio-output-v1.mp4",
+      "poster": "https://storage.poyo.ai/models/wan-3-0/examples/feature-native-audio-poster-v1.webp",
+      "alt": "Wan 3.0 video showing coordinated cinematic motion and environmental sound",
+      "source": "PoYo model page: https://poyo.ai/models/wan-3-0",
+      "aspect": 1.778
+    },
+    {
+      "id": "landing-wan-3-0-video-prime-105",
+      "model": "wan-3-0-video-prime",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/wan-3-0-video-prime/examples/feature-multimodal-reference-output-v1.mp4",
+      "poster": "https://storage.poyo.ai/models/wan-3-0-video-prime/examples/posters/feature-multimodal-reference-v1.webp",
+      "alt": "A clockwork kingfisher follows image, motion-video, river-audio, and shot-brief references in one continuous dive",
+      "source": "PoYo model page: https://poyo.ai/models/wan-3-0-video-prime",
+      "aspect": 1.73
+    },
+    {
+      "id": "landing-wan-3-0-video-prime-107",
+      "model": "wan-3-0-video-prime",
+      "type": "video",
+      "src": "https://storage.poyo.ai/models/wan-3-0-video-prime/examples/feature-first-last-frame-output-v1.mp4",
+      "poster": "https://storage.poyo.ai/models/wan-3-0-video-prime/examples/posters/feature-first-last-frame-v1.webp",
+      "alt": "A clockwork kingfisher moves through a rainy greenhouse as a closed moonflower opens between supplied first and last frames",
+      "source": "PoYo model page: https://poyo.ai/models/wan-3-0-video-prime",
+      "aspect": 1.778
+    }
+  ]
+}

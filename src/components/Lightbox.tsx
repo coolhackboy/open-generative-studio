@@ -205,6 +205,7 @@ export function Lightbox() {
             <button
               type="button"
               aria-label="Close"
+              data-autofocus
               onClick={close}
               className="glass absolute top-3 left-3 inline-flex size-9 items-center justify-center rounded-full border border-line text-fg-muted transition-colors hover:text-fg md:hidden"
             >
@@ -227,6 +228,7 @@ export function Lightbox() {
               <button
                 type="button"
                 aria-label="Close"
+              data-autofocus
                 onClick={close}
                 className="-mt-1 -mr-1 hidden size-8 items-center justify-center rounded-sm text-fg-muted hover:bg-surface-2 hover:text-fg md:inline-flex"
               >

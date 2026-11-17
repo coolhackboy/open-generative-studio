@@ -124,6 +124,7 @@ export function ModelPalette() {
           id="model-listbox"
           role="listbox"
           aria-label="Models"
+          tabIndex={-1}
           className="thin-scrollbar min-h-0 flex-1 overflow-y-auto px-2 pb-2 sm:max-h-[min(60dvh,560px)]"
         >
           {results.length === 0 && (
