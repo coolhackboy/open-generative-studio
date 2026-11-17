@@ -1,46 +1,21 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Film, Image as ImageIcon } from 'lucide-react';
 import { useMemo } from 'react';
-import { models } from '../data/catalog';
-import { getMediaFields } from '../lib/schema';
+import { getPresets, type Preset } from '../lib/presets';
 import { focusPrompt, useComposer } from '../lib/store';
-import type { CatalogModel, Example, Variant } from '../types/catalog';
 import { ModelThumb } from './ModelThumb';
-
-interface Preset {
-  key: string;
-  model: CatalogModel;
-  variant: Variant;
-  example: Example;
-}
 
 const MAX = 12;
 
-/** Pick one prompt-only example per model, featured models first, alternating video / image. */
+/** Alternate video / image presets. */
 function buildPresets(): Preset[] {
-  const ranked = [...models].sort((a, b) => Number(!!b.featured) - Number(!!a.featured) || a.order - b.order);
-  const byCat: Record<string, Preset[]> = { video: [], image: [] };
-  const seen = new Set<string>();
-  for (const model of ranked) {
-    for (const variant of model.variants) {
-      const needsMedia = getMediaFields(variant, model.category).some((f) => f.required);
-      if (needsMedia) continue;
-      const example = variant.examples.find(
-        (e) =>
-          typeof e.input.prompt === 'string' &&
-          e.input.prompt.length > 12 &&
-          !/example\.(com|org|net)/i.test(JSON.stringify(e.input)),
-      );
-      if (!example || seen.has(String(example.input.prompt))) continue;
-      seen.add(String(example.input.prompt));
-      byCat[model.category]?.push({ key: `${variant.model}:${example.name}`, model, variant, example });
-      break;
-    }
-  }
+  const all = getPresets();
+  const video = all.filter((p) => p.model.category === 'video');
+  const image = all.filter((p) => p.model.category === 'image');
   const out: Preset[] = [];
-  for (let i = 0; out.length < MAX && (i < byCat.video.length || i < byCat.image.length); i++) {
-    if (byCat.video[i]) out.push(byCat.video[i]);
-    if (byCat.image[i] && out.length < MAX) out.push(byCat.image[i]);
+  for (let i = 0; out.length < MAX && (i < video.length || i < image.length); i++) {
+    if (video[i]) out.push(video[i]);
+    if (image[i] && out.length < MAX) out.push(image[i]);
   }
   return out;
 }
@@ -92,7 +67,7 @@ export function StartHere() {
               </span>
               <span className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-3">
                 <span className="text-2xs font-medium tracking-wide text-white/55 uppercase">Example prompt</span>
-                <span className="line-clamp-3 text-[13px] leading-[18px] text-white/90">{String(p.example.input.prompt)}</span>
+                <span className="line-clamp-3 text-[13px] leading-[18px] text-white/90">{p.prompt}</span>
                 <span className="inline-flex items-center gap-1 text-2xs font-medium text-white/60 transition-colors group-hover:text-white">
                   Try it
                   <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
