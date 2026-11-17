@@ -21,3 +21,4 @@ export { toast, type ToastTone } from './toast';
 export { Toaster } from './Toaster';
 export { Toggle } from './Toggle';
 export { Tooltip } from './Tooltip';
+export { useMediaQuery } from './useMediaQuery';

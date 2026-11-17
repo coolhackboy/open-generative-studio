@@ -1,14 +1,14 @@
 import { motion, useInView, useReducedMotion } from 'motion/react';
-import { ArrowRight, ArrowUpRight, FlaskConical, KeyRound, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, FlaskConical, KeyRound, Pause, Play, Sparkles, Star } from 'lucide-react';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { config } from '../config';
 import { getModel, getVariant, models } from '../data/catalog';
 import { MOCK_MODE } from '../lib/api';
 import { formatUSD } from '../lib/cost';
 import { focusPrompt, useComposer, useSettings, useUI } from '../lib/store';
-import { hasKnownInput, useShowcase, type ShowcaseItem } from '../lib/showcase';
+import { hasKnownInput, releaseVideo, requestPlay, useShowcase, type ShowcaseItem } from '../lib/showcase';
 import { seedDemo } from '../lib/tasks';
-import { cn } from '../ui';
+import { cn, useMediaQuery } from '../ui';
 import { GitHubIcon } from './Brand';
 
 /** Load a showcase item into the composer: exact settings when known, otherwise just the model. */
@@ -24,21 +24,29 @@ function useItem(item: ShowcaseItem) {
   };
 }
 
-/** Image or lazily-loaded looping video; only plays while on screen (and never under reduced motion). */
+/**
+ * Poster first; the clip is mounted only while on screen and plays through a shared queue
+ * (max 6 at once). Never plays under reduced motion or when the user paused the showcase.
+ */
 const TileMedia = memo(function TileMedia({ item, eager }: { item: ShowcaseItem; eager?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const near = useInView(ref, { margin: '300px 0px' });
-  const visible = useInView(ref, { amount: 0.2 });
+  const visible = useInView(ref, { amount: 0.35 });
   const reduce = useReducedMotion();
+  const paused = useShowcase((s) => s.paused);
   const [loaded, setLoaded] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const active = item.type === 'video' && visible && !reduce && !paused;
 
   useEffect(() => {
     const v = videoRef.current;
-    if (!v) return;
-    if (visible && !reduce) void v.play().catch(() => undefined);
-    else v.pause();
-  }, [visible, reduce, near]);
+    if (!v || !active) return;
+    requestPlay(v);
+    return () => {
+      releaseVideo(v);
+      setPlaying(false);
+    };
+  }, [active]);
 
   const still = item.type === 'video' ? item.poster : item.src;
   return (
@@ -53,16 +61,16 @@ const TileMedia = memo(function TileMedia({ item, eager }: { item: ShowcaseItem;
           className={cn('absolute inset-0 size-full object-cover transition-opacity duration-500', loaded ? 'opacity-100' : 'opacity-0')}
         />
       )}
-      {item.type === 'video' && (near || visible) && !reduce && (
+      {active && (
         <video
           ref={videoRef}
           src={item.src}
-          poster={item.poster}
           muted
           loop
           playsInline
           preload="none"
-          className="absolute inset-0 size-full object-cover"
+          onPlaying={() => setPlaying(true)}
+          className={cn('absolute inset-0 size-full object-cover transition-opacity duration-300', playing ? 'opacity-100' : 'opacity-0')}
         />
       )}
     </div>
@@ -96,7 +104,18 @@ function TileInfo({ item }: { item: ShowcaseItem }) {
   );
 }
 
-export function ShowcaseTile({ item, className, eager }: { item: ShowcaseItem; className?: string; eager?: boolean }) {
+export function ShowcaseTile({
+  item,
+  className,
+  eager,
+  duplicate,
+}: {
+  item: ShowcaseItem;
+  className?: string;
+  eager?: boolean;
+  /** Loop copy in the scrolling wall: hidden from assistive tech and the tab order. */
+  duplicate?: boolean;
+}) {
   const use = useItem(item);
   const model = getModel(item.model);
   const known = hasKnownInput(item);
@@ -104,6 +123,8 @@ export function ShowcaseTile({ item, className, eager }: { item: ShowcaseItem; c
     <button
       type="button"
       onClick={use}
+      aria-hidden={duplicate || undefined}
+      tabIndex={duplicate ? -1 : undefined}
       aria-label={`${known ? 'Use this prompt' : 'Try model'}: ${model?.name ?? item.model}. ${item.alt}`}
       className={cn(
         'group relative block w-full overflow-hidden rounded-md bg-surface-2 text-left ring-1 ring-line outline-offset-2',
@@ -132,24 +153,27 @@ function columnsOf(items: ShowcaseItem[], n: number): ShowcaseItem[][] {
 
 function Wall({ items }: { items: ShowcaseItem[] }) {
   const reduce = useReducedMotion();
+  const paused = useShowcase((s) => s.paused);
   const cols = useMemo(() => columnsOf(items, 5), [items]);
+  const still = reduce || paused;
   return (
-    <div className="group/wall absolute inset-0 grid grid-cols-5 gap-2.5 overflow-hidden px-2.5" aria-hidden="false">
+    <div role="group" aria-label="Showcase of real outputs" className="group/wall absolute inset-0 grid grid-cols-5 gap-2.5 overflow-hidden px-2.5">
       {cols.map((col, i) => (
         <div key={i} className="relative overflow-hidden">
           <div
-            className={cn('flex flex-col gap-2.5', !reduce && 'group-hover/wall:[animation-play-state:paused]')}
+            className="flex flex-col gap-2.5 group-focus-within/wall:[animation-play-state:paused] group-hover/wall:[animation-play-state:paused]"
             style={
               reduce
                 ? { transform: `translateY(-${(i % 2) * 12}%)` }
                 : {
                     animation: `wall-scroll ${70 + i * 9}s linear infinite`,
                     animationDirection: i % 2 ? 'reverse' : 'normal',
+                    animationPlayState: still ? 'paused' : undefined,
                   }
             }
           >
             {[...col, ...col].map((it, k) => (
-              <ShowcaseTile key={`${it.id}-${k}`} item={it} eager={k < 3} />
+              <ShowcaseTile key={`${it.id}-${k}`} item={it} eager={k < 2} duplicate={k >= col.length} />
             ))}
           </div>
         </div>
@@ -232,7 +256,7 @@ function Ctas() {
 /** Same count as the model palette (catalog entries after normalization). */
 const modelCount = () => models.length;
 
-function HeroCopy({ compact }: { compact?: boolean }) {
+function HeroCopy({ compact, id }: { compact?: boolean; id?: string }) {
   return (
     <div className="flex flex-col items-center text-center">
       <p className="label mb-4 inline-flex items-center gap-2 rounded-full border border-line bg-bg/70 px-3 py-1 text-fg-muted backdrop-blur-md">
@@ -240,6 +264,7 @@ function HeroCopy({ compact }: { compact?: boolean }) {
         Open source · MIT · {modelCount()} models
       </p>
       <h1
+        id={id}
         className={cn(
           'max-w-[16ch] font-semibold tracking-[-0.035em] text-balance text-fg',
           compact ? 'text-display-sm' : 'text-display-sm md:text-display',
@@ -258,17 +283,53 @@ function HeroCopy({ compact }: { compact?: boolean }) {
   );
 }
 
+/** WCAG 2.2.2: a visible control to pause the moving wall and clips. */
+function PauseButton({ className }: { className?: string }) {
+  const paused = useShowcase((s) => s.paused);
+  const setPaused = useShowcase((s) => s.setPaused);
+  const reduce = useReducedMotion();
+  if (reduce) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => setPaused(!paused)}
+      aria-pressed={paused}
+      aria-label={paused ? 'Play showcase motion' : 'Pause showcase motion'}
+      className={cn(
+        'glass inline-flex size-6 items-center justify-center rounded-full border border-line-strong text-fg-muted transition-colors before:absolute before:-inset-2.5 hover:text-fg',
+        className,
+      )}
+    >
+      {paused ? <Play size={11} fill="currentColor" /> : <Pause size={11} fill="currentColor" />}
+    </button>
+  );
+}
+
 /** First screen: a live wall of real outputs behind the pitch. */
 export function ShowcaseHero() {
   const items = useShowcase((s) => s.items);
   const status = useShowcase((s) => s.status);
   const load = useShowcase((s) => s.load);
+  const wide = useMediaQuery('(min-width: 768px)');
   useEffect(() => void load(), [load]);
+
+  if (!wide) {
+    return (
+      <section aria-labelledby="hero-title-mobile" className="relative">
+        <div className="glow px-4 pt-8 pb-4">
+          <HeroCopy compact id="hero-title-mobile" />
+          <div className="relative mt-8">
+            {items.length > 0 ? <Carousel items={items} /> : <div className="shimmer h-80 rounded-md" />}
+            {items.length > 0 && <PauseButton className="absolute -top-8 right-0" />}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="hero-title" className="relative">
-      {/* Desktop wall */}
-      <div className="relative hidden h-[calc(100dvh-56px)] min-h-[620px] overflow-hidden md:block">
+      <div className="relative h-[calc(100dvh-56px)] min-h-[620px] overflow-hidden">
         {items.length > 0 && <Wall items={items} />}
         {status !== 'ready' && <div className="shimmer absolute inset-0" />}
         {/* Fade band holding the copy */}
@@ -279,17 +340,13 @@ export function ShowcaseHero() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          id="hero-title"
           className="pointer-events-auto absolute inset-x-0 top-1/2 mx-auto w-fit -translate-y-[58%] px-6 [&_a]:pointer-events-auto [&_button]:pointer-events-auto"
         >
-          <HeroCopy />
+          <HeroCopy id="hero-title" />
         </motion.div>
-      </div>
-
-      {/* Mobile: copy then a swipeable carousel */}
-      <div className="glow px-4 pt-8 pb-4 md:hidden" id="hero-title-mobile">
-        <HeroCopy compact />
-        <div className="mt-8">{items.length > 0 ? <Carousel items={items} /> : <div className="shimmer h-80 rounded-md" />}</div>
+        {items.length > 0 && (
+          <PauseButton className="absolute right-5 bottom-[calc(var(--composer-h,120px)+36px)] z-10" />
+        )}
       </div>
     </section>
   );

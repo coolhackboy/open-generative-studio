@@ -27,6 +27,9 @@ interface ShowcaseState {
   items: ShowcaseItem[];
   status: 'idle' | 'loading' | 'ready' | 'error';
   load: () => Promise<void>;
+  /** User paused the moving wall and clips (WCAG 2.2.2). */
+  paused: boolean;
+  setPaused: (v: boolean) => void;
 }
 
 function resolve(url: string | undefined, base: string): string | undefined {
@@ -41,6 +44,11 @@ function resolve(url: string | undefined, base: string): string | undefined {
 export const useShowcase = create<ShowcaseState>((set, get) => ({
   items: [],
   status: 'idle',
+  paused: false,
+  setPaused: (paused) => {
+    set({ paused });
+    if (paused) stopAllVideos();
+  },
   load: async () => {
     if (get().status === 'loading' || get().status === 'ready') return;
     set({ status: 'loading' });
@@ -66,4 +74,47 @@ export const useShowcase = create<ShowcaseState>((set, get) => ({
 
 export function hasKnownInput(item: ShowcaseItem): item is ShowcaseItem & { input: Record<string, unknown> } {
   return !!item.input && typeof item.input.prompt === 'string';
+}
+
+// ---------------------------------------------------------------- play queue
+
+/** At most this many showcase clips play at once; the rest wait for a free slot. */
+const MAX_PLAYING = 6;
+const playing = new Set<HTMLVideoElement>();
+const waiting: HTMLVideoElement[] = [];
+
+function start(v: HTMLVideoElement) {
+  playing.add(v);
+  v.play().catch(() => releaseVideo(v));
+}
+
+/** Ask to play a clip; it starts now if a slot is free, otherwise when one frees up. */
+export function requestPlay(v: HTMLVideoElement): void {
+  if (playing.has(v) || waiting.includes(v)) return;
+  if (playing.size < MAX_PLAYING) start(v);
+  else waiting.push(v);
+}
+
+/** Stop a clip (off screen / unmounted) and hand its slot to the next waiting clip. */
+export function releaseVideo(v: HTMLVideoElement): void {
+  const i = waiting.indexOf(v);
+  if (i !== -1) waiting.splice(i, 1);
+  if (!playing.delete(v)) return;
+  v.pause();
+  while (waiting.length && playing.size < MAX_PLAYING) {
+    const next = waiting.shift()!;
+    if (next.isConnected) start(next);
+  }
+}
+
+function stopAllVideos(): void {
+  for (const v of [...playing]) {
+    v.pause();
+    playing.delete(v);
+  }
+  waiting.length = 0;
+}
+
+export function playingCount(): number {
+  return playing.size;
 }

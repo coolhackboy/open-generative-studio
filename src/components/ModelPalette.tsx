@@ -11,7 +11,7 @@ import { useShowcase } from '../lib/showcase';
 import { focusPrompt, useComposer, useUI } from '../lib/store';
 import type { CatalogModel, Category } from '../types/catalog';
 import { cn, Dialog, Kbd, Segmented } from '../ui';
-import { ModelThumb } from './ModelThumb';
+import { ModelThumb, ProviderIcon } from './ModelThumb';
 
 type Tab = 'all' | Category;
 const TABS: Tab[] = ['all', 'video', 'image'];
@@ -22,21 +22,6 @@ interface Row {
   model: CatalogModel;
   nameMatches: number[];
   group: string;
-}
-
-function ProviderIcon({ model }: { model: CatalogModel }) {
-  const [failed, setFailed] = useState(false);
-  if (!model.icon || failed)
-    return (
-      <span className="flex size-6 shrink-0 items-center justify-center rounded-xs bg-surface-3 font-mono text-xs text-fg-muted">
-        {model.provider.charAt(0)}
-      </span>
-    );
-  return (
-    <span className="flex size-6 shrink-0 items-center justify-center rounded-xs bg-white p-0.5 ring-1 ring-line">
-      <img src={model.icon} alt="" width={20} height={20} loading="lazy" onError={() => setFailed(true)} className="size-5 object-contain" />
-    </span>
-  );
 }
 
 function Highlight({ text, matches }: { text: string; matches: number[] }) {
@@ -342,8 +327,8 @@ export function ModelPalette() {
               className="thin-scrollbar relative min-h-0 flex-1 overflow-y-auto px-2 pb-2"
             >
               {rows.length === 0 && (
-                <div className="px-4 py-16 text-center text-sm text-fg-subtle">
-                  No models match “{query}”.
+                <div className="px-4 py-16 text-center text-sm break-words text-fg-subtle [overflow-wrap:anywhere]">
+                  No models match “{query.length > 48 ? `${query.slice(0, 47)}…` : query}”.
                   <br />
                   Try a maker (ByteDance, Google) or a task (i2v, edit).
                 </div>
