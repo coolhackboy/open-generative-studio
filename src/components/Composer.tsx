@@ -1,8 +1,9 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { animate, AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowUp, ChevronDown, Code2, Info, Upload } from 'lucide-react';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { estimateCost, formatUSD, isUsageBilled, startingPriceLabel } from '../lib/cost';
 import { modKey } from '../lib/format';
+import { getPresets, type Preset } from '../lib/presets';
 import {
   buildInput,
   getMediaFields,
@@ -15,24 +16,39 @@ import {
 import { useComposer, useCurrentModel, useSettings, useUI } from '../lib/store';
 import { addFiles, generate, kindOfFile } from '../lib/tasks';
 import type { CatalogModel, Variant } from '../types/catalog';
-import { Button, Chip, cn, Dialog, Kbd, Popover, Tooltip } from '../ui';
+import { Chip, cn, Dialog, Kbd, Popover, Shake, Spinner, Tooltip } from '../ui';
 import { CodeTabs } from './CodeTabs';
 import { AttachButton, MediaTray } from './MediaTray';
+import { useMediaPicker } from './useMediaPicker';
 import { ModelThumb } from './ModelThumb';
 import { MoreParams, ParamChip } from './ParamControls';
 
-function ModelButton({ model }: { model: CatalogModel }) {
+// ---------------------------------------------------------------- pieces
+
+function ModelButton({ model, preview }: { model: CatalogModel; preview?: CatalogModel }) {
   const setOpen = useUI((s) => s.setPaletteOpen);
+  const shown = preview ?? model;
   return (
     <Tooltip label={<span className="inline-flex items-center gap-1">Switch model · {modKey} K</span>} side="top">
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Model: ${model.name}. Change model`}
-        className="inline-flex h-8 max-w-[220px] shrink-0 items-center gap-2 rounded-sm border border-line-strong bg-surface-2 pr-2 pl-1 text-[13px] font-medium text-fg transition-colors hover:bg-surface-3"
+        className="inline-flex h-8 max-w-[240px] shrink-0 items-center gap-2 rounded-sm border border-line-strong bg-surface-2 pr-2 pl-1 text-sm font-medium text-fg transition-colors hover:bg-surface-3 max-sm:h-11"
       >
-        <ModelThumb model={model} className="size-6 rounded-xs" />
-        <span className="truncate">{model.name}</span>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={shown.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex min-w-0 items-center gap-2"
+          >
+            <ModelThumb model={shown} className="size-6 rounded-xs" />
+            <span className="truncate">{shown.name}</span>
+          </motion.span>
+        </AnimatePresence>
         <ChevronDown size={14} className="shrink-0 text-fg-subtle" />
       </button>
     </Tooltip>
@@ -50,14 +66,16 @@ function VariantPicker({ model, variant }: { model: CatalogModel; variant: Varia
         ref={ref}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label={`Variant: ${variant.label}`}
         active={open}
         value={variant.label}
         onClick={() => setOpen((o) => !o)}
+        className="max-sm:h-11"
       >
         <ChevronDown size={13} className="text-fg-subtle" />
       </Chip>
-      <Popover open={open} onClose={() => setOpen(false)} anchorRef={ref} label="Variant" className="w-[240px] p-1.5">
-        <div className="px-2 pt-1 pb-1.5 text-xs font-medium tracking-[0.02em] text-fg-subtle ">Variant</div>
+      <Popover open={open} onClose={() => setOpen(false)} anchorRef={ref} label="Variant" className="w-[260px] p-1.5">
+        <div className="label px-2 pt-1 pb-1.5">Variant</div>
         <div role="radiogroup" aria-label="Variant" className="flex flex-col">
           {model.variants.map((v) => (
             <button
@@ -70,7 +88,7 @@ function VariantPicker({ model, variant }: { model: CatalogModel; variant: Varia
                 setOpen(false);
               }}
               className={cn(
-                'flex items-center justify-between gap-3 rounded-sm px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-surface-2',
+                'flex items-center justify-between gap-3 rounded-sm px-2 py-2 text-left text-sm transition-colors hover:bg-surface-2',
                 v.model === variant.model ? 'text-fg' : 'text-fg-muted',
               )}
             >
@@ -84,27 +102,52 @@ function VariantPicker({ model, variant }: { model: CatalogModel; variant: Varia
   );
 }
 
-function CostLabel({ variant, input, model }: { variant: Variant; input: Record<string, unknown>; model: CatalogModel }) {
-  const est = useMemo(() => estimateCost(variant, input), [variant, input]);
-  if (est) {
-    return (
-      <Tooltip label={`${est.label} · ${est.credits} credits`} side="top">
-        <span tabIndex={0} className="rounded-xs font-mono text-xs text-fg-muted tabular-nums">
-          ≈ {formatUSD(est.usd)}
-        </span>
-      </Tooltip>
-    );
-  }
-  if (isUsageBilled(variant))
-    return <span className="text-xs whitespace-nowrap text-fg-subtle">Billed by usage</span>;
+/** Smoothly tweens a dollar amount (160ms). */
+function TweenUSD({ value }: { value: number }) {
+  const reduce = useReducedMotion();
+  const [shown, setShown] = useState(value);
+  const prev = useRef(value);
+  useEffect(() => {
+    if (reduce || prev.current === value) {
+      prev.current = value;
+      setShown(value);
+      return;
+    }
+    const controls = animate(prev.current, value, { duration: 0.16, ease: 'easeOut', onUpdate: setShown });
+    prev.current = value;
+    return () => controls.stop();
+  }, [value, reduce]);
+  return <>{formatUSD(shown)}</>;
+}
+
+/** Price hint when there's no exact estimate (usage-billed or input-length dependent). */
+function PriceHint({ variant, model }: { variant: Variant; model: CatalogModel }) {
+  if (isUsageBilled(variant)) return <span className="text-xs whitespace-nowrap text-fg-subtle">Billed by usage</span>;
   const from = startingPriceLabel({ ...model, variants: [variant] });
   return (
     <Tooltip label="Price depends on input length" side="top">
-      <span tabIndex={0} className="inline-flex items-center gap-1 text-xs whitespace-nowrap text-fg-subtle">
+      <span tabIndex={0} className="inline-flex items-center gap-1 rounded-xs text-xs whitespace-nowrap text-fg-subtle">
         <Info size={12} />
         {from ?? 'Varies'}
       </span>
     </Tooltip>
+  );
+}
+
+/** Toolbar group; groups after the first carry a hairline divider that also reads well when wrapped. */
+function Group({ children, label, divider, dim }: { children: ReactNode; label: string; divider?: boolean; dim?: boolean }) {
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className={cn(
+        'flex shrink-0 items-center gap-1.5 transition-opacity duration-200',
+        divider && 'sm:border-l sm:border-line-strong sm:pl-2',
+        dim && 'opacity-45',
+      )}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -166,6 +209,66 @@ function useFileDrop(enabled: boolean) {
   return dragging;
 }
 
+// ---------------------------------------------------------------- animated placeholder
+
+const TYPE_MS = 35;
+const HOLD_MS = 1800;
+const DELETE_MS = 15;
+
+/**
+ * Types real example prompts into the placeholder (DOM-only, no re-render per character) and
+ * reports which preset is showing so the model chip and price can follow along.
+ */
+function useTypewriter(
+  ref: React.RefObject<HTMLTextAreaElement | null>,
+  enabled: boolean,
+  fallback: string,
+): Preset | undefined {
+  const presets = useMemo(() => getPresets().filter((p) => p.prompt.length <= 140), []);
+  const [current, setCurrent] = useState<Preset | undefined>();
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!enabled || presets.length === 0) {
+      el.placeholder = fallback;
+      setCurrent(undefined);
+      return;
+    }
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    let i = Math.floor(Math.random() * presets.length);
+    const wait = (ms: number) => new Promise<void>((r) => (timer = setTimeout(r, ms)));
+    (async () => {
+      await wait(600);
+      while (!cancelled) {
+        const p = presets[i % presets.length];
+        setCurrent(p);
+        for (let n = 1; n <= p.prompt.length && !cancelled; n++) {
+          el.placeholder = p.prompt.slice(0, n);
+          await wait(TYPE_MS);
+        }
+        await wait(HOLD_MS);
+        for (let n = p.prompt.length; n >= 0 && !cancelled; n--) {
+          el.placeholder = p.prompt.slice(0, n);
+          await wait(DELETE_MS);
+        }
+        i++;
+      }
+    })();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      el.placeholder = fallback;
+      setCurrent(undefined);
+    };
+  }, [ref, enabled, presets, fallback]);
+
+  return enabled ? current : undefined;
+}
+
+// ---------------------------------------------------------------- composer
+
 export function Composer() {
   const { model, variant } = useCurrentModel();
   const prompt = useComposer((s) => s.prompt);
@@ -174,9 +277,13 @@ export function Composer() {
   const setParam = useComposer((s) => s.setParam);
   const media = useComposer((s) => s.media);
   const submitting = useComposer((s) => s.submitting);
+  const invalid = useComposer((s) => s.invalid);
   const apiBase = useSettings((s) => s.apiBase);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const reduce = useReducedMotion();
+  const { pick, input: pickerInput } = useMediaPicker();
 
   useAutoGrow(taRef, prompt);
 
@@ -202,10 +309,25 @@ export function Composer() {
     return buildInput({ variant, prompt, params, media: urls });
   }, [variant, prompt, params, media]);
 
+  const promptEnabled = variant ? hasPrompt(variant) : false;
+  const fallbackPlaceholder = !model
+    ? ''
+    : promptEnabled
+      ? model.category === 'video'
+        ? 'Describe the video you want to create…'
+        : 'Describe the image you want to create…'
+      : `${model.name} doesn't use a prompt — add references instead.`;
+  const demo = useTypewriter(taRef, !reduce && !focused && !prompt && media.length === 0 && promptEnabled, fallbackPlaceholder);
+
+  const estimate = useMemo(() => {
+    if (demo) return estimateCost(demo.variant, demo.example.input);
+    return variant ? estimateCost(variant, input) : null;
+  }, [demo, variant, input]);
+
   const dragging = useFileDrop(mediaFields.length > 0);
 
   if (!model || !variant) return null;
-  const promptEnabled = hasPrompt(variant);
+  const moreInvalid = !!invalid && more.some((f) => f.name === invalid.field);
 
   return (
     <>
@@ -215,85 +337,121 @@ export function Composer() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.1 }}
           className={cn(
-            'glass pointer-events-auto w-full border-t border-line-strong shadow-lg max-sm:bg-surface sm:max-w-[880px] sm:rounded-lg sm:border',
+            'glass pointer-events-auto w-full border-t border-line-strong shadow-lg transition-[border-color,box-shadow] duration-200 max-sm:bg-surface sm:max-w-[960px] sm:rounded-lg sm:border',
+            'focus-within:border-[color-mix(in_oklab,var(--accent)_55%,var(--line-strong))] sm:focus-within:shadow-[0_0_0_4px_var(--accent-soft),var(--shadow-lg)]',
             'pb-[env(safe-area-inset-bottom)] sm:pb-0',
           )}
           onDragOver={(e) => e.preventDefault()}
         >
-          <MediaTray fields={mediaFields} />
+          {pickerInput}
+          <MediaTray fields={mediaFields} onPick={pick} />
 
           <label htmlFor="prompt-input" className="sr-only">
             Prompt
           </label>
-          <textarea
-            id="prompt-input"
-            ref={taRef}
-            rows={1}
-            value={prompt}
-            disabled={!promptEnabled}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder={
-              promptEnabled
-                ? model.category === 'video'
-                  ? 'Describe the video you want to create…'
-                  : 'Describe the image you want to create…'
-                : `${model.name} doesn't use a prompt — add references instead.`
-            }
-            className="thin-scrollbar block max-h-[220px] min-h-[52px] w-full resize-none bg-transparent px-4 pt-3.5 pb-2 text-base leading-6 text-fg sm:text-[15px] outline-none placeholder:text-fg-subtle focus-visible:outline-none disabled:cursor-not-allowed"
-          />
+          <Shake active={invalid?.field === 'prompt'} nonce={invalid?.nonce} block className="mx-1 mt-1 rounded-md">
+            <textarea
+              id="prompt-input"
+              ref={taRef}
+              rows={1}
+              value={prompt}
+              disabled={!promptEnabled}
+              aria-invalid={invalid?.field === 'prompt' || undefined}
+              onChange={(e) => setPrompt(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              placeholder={fallbackPlaceholder}
+              className="thin-scrollbar block max-h-[220px] min-h-[52px] w-full resize-none bg-transparent px-3 pt-2.5 pb-2 text-base leading-6 text-fg outline-none placeholder:text-fg-subtle focus-visible:outline-none disabled:cursor-not-allowed max-sm:text-[16px]"
+            />
+          </Shake>
 
           {unsupported.length > 0 && (
-            <p className="mx-3 mb-2 flex items-start gap-1.5 rounded-sm bg-warning/10 px-2.5 py-1.5 text-xs leading-4 text-warning">
-              <Info size={12} className="mt-0.5 shrink-0" />
+            <p className="mx-3 mb-2 flex items-start gap-1.5 rounded-sm bg-warning/10 px-2.5 py-1.5 text-xs text-warning">
+              <Info size={13} className="mt-0.5 shrink-0" />
               This variant requires {unsupported.map((n) => `“${humanize(n)}”`).join(', ')}, which the composer can’t edit
               yet. Use the code button to send it via the API.
             </p>
           )}
 
-          <div className="flex items-center gap-2 px-2.5 pb-2.5">
-            <div className="no-scrollbar -my-1 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-1 pr-4 [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)]">
-              <ModelButton model={model} />
-              <VariantPicker model={model} variant={variant} />
-              <AttachButton fields={mediaFields} />
-              {primary.map((f) => (
-                <ParamChip key={f.name} field={f} value={params[f.name]} onChange={(v) => setParam(f.name, v)} />
-              ))}
-              <MoreParams fields={more} params={params} onChange={setParam} />
+          <div className="flex items-end gap-2 px-2.5 pb-2.5">
+            <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-0.5 sm:gap-x-2 max-sm:[mask-image:linear-gradient(to_right,black_calc(100%-20px),transparent)] max-sm:pr-5 sm:flex-wrap sm:gap-y-2 sm:overflow-visible">
+              <Group label="Model">
+                <ModelButton model={model} preview={demo?.model} />
+                <VariantPicker model={model} variant={variant} />
+              </Group>
+              {mediaFields.length > 0 && (
+                <Group label="References" divider dim={!!demo}>
+                  <AttachButton fields={mediaFields} onPick={pick} />
+                </Group>
+              )}
+              {(primary.length > 0 || more.length > 0) && (
+                <Group label="Settings" divider dim={!!demo}>
+                    {primary.map((f) => (
+                      <Shake key={f.name} active={invalid?.field === f.name} nonce={invalid?.nonce}>
+                        <ParamChip field={f} value={params[f.name]} onChange={(v) => setParam(f.name, v)} />
+                      </Shake>
+                    ))}
+                  <Shake active={moreInvalid} nonce={invalid?.nonce}>
+                    <MoreParams fields={more} params={params} onChange={setParam} />
+                  </Shake>
+                </Group>
+              )}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="hidden sm:inline-flex">
-                <CostLabel variant={variant} input={input} model={model} />
-              </span>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {!estimate && (
+                <span className="hidden sm:inline-flex">
+                  <PriceHint variant={variant} model={model} />
+                </span>
+              )}
               <Tooltip label="Copy as code" side="top">
                 <button
                   type="button"
                   aria-label="Copy current settings as code"
                   onClick={() => setCodeOpen(true)}
-                  className="hidden size-8 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-2 hover:text-fg sm:inline-flex"
+                  className="inline-flex size-8 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-2 hover:text-fg max-sm:size-11"
                 >
                   <Code2 size={16} />
                 </button>
               </Tooltip>
-              <Button
-                variant="primary"
-                onClick={() => void generate()}
-                loading={submitting}
-                aria-label="Generate"
-                aria-keyshortcuts="Control+Enter Meta+Enter"
-                className="h-9 rounded-sm px-2.5 sm:px-3.5"
-                icon={<ArrowUp size={16} strokeWidth={2.25} />}
+              <Tooltip
+                label={
+                  estimate ? (
+                    <span>
+                      {estimate.label} · {estimate.credits} credits
+                    </span>
+                  ) : (
+                    <span>Generate · {modKey}↵</span>
+                  )
+                }
+                side="top"
               >
-                <span className="hidden sm:inline">Generate</span>
-                <span className="ml-0.5 hidden items-center gap-0.5 opacity-60 lg:inline-flex">
-                  <span className="font-mono text-xs">{modKey}↵</span>
-                </span>
-              </Button>
+                <button
+                  type="button"
+                  onClick={() => void generate()}
+                  disabled={submitting}
+                  aria-busy={submitting || undefined}
+                  aria-keyshortcuts="Control+Enter Meta+Enter"
+                  aria-label={estimate && !demo ? `Generate, about ${formatUSD(estimate.usd)}` : 'Generate'}
+                  className="inline-flex h-9 shrink-0 items-center gap-2 rounded-sm bg-accent px-3 text-sm font-medium whitespace-nowrap text-accent-fg shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] transition-[background-color,transform] duration-150 select-none hover:bg-accent-hover active:scale-[0.97] disabled:opacity-70 max-sm:h-11 max-sm:px-3.5 sm:px-3.5"
+                >
+                  {submitting ? <Spinner size={15} /> : <ArrowUp size={16} strokeWidth={2.25} />}
+                  <span className="hidden sm:inline">Generate</span>
+                  {estimate && (
+                    <span className="font-mono text-[13px] tabular-nums">
+                      <span className="hidden sm:inline">· </span>
+                      <TweenUSD value={estimate.usd} />
+                    </span>
+                  )}
+                </button>
+              </Tooltip>
             </div>
           </div>
-          <div className="flex items-center justify-between border-t border-line px-3 py-1.5 sm:hidden">
-            <CostLabel variant={variant} input={input} model={model} />
-            <span className="text-xs text-fg-subtle">{model.category === 'video' ? 'Video' : 'Image'}</span>
-          </div>
+          {!estimate && (
+            <div className="flex items-center justify-between border-t border-line px-3 py-1.5 sm:hidden">
+              <PriceHint variant={variant} model={model} />
+              <span className="text-xs text-fg-subtle">{model.category === 'video' ? 'Video' : 'Image'}</span>
+            </div>
+          )}
         </motion.div>
       </section>
 
@@ -308,7 +466,7 @@ export function Composer() {
           >
             <div className="flex w-full max-w-md flex-col items-center gap-3 rounded-lg border-2 border-dashed border-accent/60 bg-surface/80 px-8 py-12 text-center">
               <Upload size={26} className="text-accent-ink" />
-              <p className="text-[15px] font-medium text-fg">
+              <p className="text-base font-medium text-fg">
                 {mediaFields.length > 0 ? 'Drop to add as reference' : `${model.name} doesn't take references`}
               </p>
               <p className="text-xs text-fg-muted">
@@ -329,10 +487,9 @@ export function Composer() {
         size="lg"
       >
         <div className="px-5 pb-5">
-          <CodeTabs baseUrl={apiBase} model={variant.model} input={codeInput} />
+          <CodeTabs baseUrl={apiBase} model={variant.model} input={codeInput} defaultOpen />
           <div className="mt-2 text-xs text-fg-subtle">
-            Local files you attached are uploaded first; their hosted URLs appear in the snippet once uploads finish.{' '}
-            <Kbd>Esc</Kbd> to close.
+            Attached files appear as their hosted URLs once uploaded. <Kbd>Esc</Kbd> to close.
           </div>
         </div>
       </Dialog>

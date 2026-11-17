@@ -140,6 +140,7 @@ export function ParamChip({
         label={field.label}
         value={display}
         onClick={() => onChange(!value)}
+        className="max-sm:h-11"
       />
     );
   }
@@ -156,6 +157,7 @@ export function ParamChip({
         value={display}
         title={field.label}
         onClick={() => setOpen((o) => !o)}
+        className="max-sm:h-11"
       />
       <Popover
         open={open}
@@ -209,6 +211,7 @@ export function MoreParams({
         icon={<SlidersHorizontal size={14} />}
         label="More"
         onClick={() => setOpen((o) => !o)}
+        className="max-sm:h-11"
       >
         {changed > 0 && (
           <span className="inline-flex size-4 items-center justify-center rounded-full bg-accent-soft font-mono text-xs text-accent-ink">

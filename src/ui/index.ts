@@ -13,6 +13,7 @@ export { Masonry, type MasonryProps } from './Masonry';
 export { Popover, type PopoverProps } from './Popover';
 export { Segmented, type SegmentedOption } from './Segmented';
 export { Slider } from './Slider';
+export { Shake } from './Shake';
 export { Spinner } from './Spinner';
 export { initTheme, resolvedTheme, useTheme, type ThemePref } from './theme';
 export { ThemeToggle } from './ThemeToggle';
