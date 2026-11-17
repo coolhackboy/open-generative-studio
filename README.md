@@ -292,8 +292,8 @@ API key — pay as you go, no subscription required. Prices for each model are l
 
 In your browser: the gallery (prompts, settings, result URLs) is kept in IndexedDB, and your API key in
 `localStorage`. Your key, prompts and uploads go only to the API base you configured. Besides that, the page loads
-showcase media and model icons from `storage.poyo.ai` and the star count from GitHub's public API; fonts are
-self-hosted. The media files themselves are hosted by PoYo; download anything you want to keep long-term. Uploaded
+model icons and thumbnails from `storage.poyo.ai` and the star count from GitHub's public API; fonts and the
+showcase media are self-hosted. The media files themselves are hosted by PoYo; download anything you want to keep long-term. Uploaded
 reference images expire after 72 hours. Clearing site data or switching browsers starts a fresh gallery.
 </details>
 
