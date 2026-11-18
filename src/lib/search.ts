@@ -59,6 +59,14 @@ export function buildIndex(models: CatalogModel[]): Indexed[] {
   });
 }
 
+const isWordChar = (s: string, i: number) =>
+  /[a-z0-9]/.test(s[i] ?? '') || (s[i] === '.' && /[0-9]/.test(s[i - 1] ?? '') && /[0-9]/.test(s[i + 1] ?? ''));
+
+/** True when `lower[start..end]` is a whole word, so "2" does not count as a hit inside "2.1" or "25". */
+function isWholeWord(lower: string, start: number, end: number): boolean {
+  return !isWordChar(lower, start - 1) && !isWordChar(lower, end + 1);
+}
+
 /** Character indices in `name` matched by `term` (substring first, then subsequence). */
 function matchName(name: string, term: string): number[] | null {
   const lower = name.toLowerCase();
@@ -98,8 +106,11 @@ export function searchModels(index: Indexed[], query: string): SearchHit[] {
   if (!raw) return index.map((x) => ({ model: x.model, score: 0, nameMatches: [] }));
   const terms = raw.split(/\s+/).map((t) => TASK_ALIASES[t] ?? [t]);
   const hits: SearchHit[] = [];
+  const compactQuery = compact(raw);
   for (const x of index) {
-    let score = 0;
+    const lower = x.name.toLowerCase();
+    // The query spells the whole name ("nano banana 2" → Nano Banana 2, not 2.1 or 2 Lite).
+    let score = compact(x.name) === compactQuery ? 200 : 0;
     const nameMatches = new Set<number>();
     let ok = true;
     for (const alternatives of terms) {
@@ -109,7 +120,8 @@ export function searchModels(index: Indexed[], query: string): SearchHit[] {
         const nm = matchName(x.name, term);
         if (nm) {
           const contiguous = nm.length > 0 && nm[nm.length - 1] - nm[0] === nm.length - 1;
-          const sc = contiguous ? (nm[0] === 0 ? 120 : 100) : 60;
+          let sc = contiguous ? (nm[0] === 0 ? 120 : 100) : 60;
+          if (contiguous && isWholeWord(lower, nm[0], nm[nm.length - 1])) sc += 15;
           if (sc > best) [best, bestMatches] = [sc, nm];
         } else if (x.text.includes(term)) best = Math.max(best, 40);
         else if (x.compactText.includes(compact(term))) best = Math.max(best, 30);

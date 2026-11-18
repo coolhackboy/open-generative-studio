@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { ArrowUpRight, Check, Search } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { config } from '../config';
@@ -272,7 +272,7 @@ export function ModelPalette() {
     }
   };
 
-  const current = rows[active]?.model;
+  const current = rows[Math.min(active, rows.length - 1)]?.model;
 
   let section: ReactNode = null;
   return (
@@ -284,7 +284,10 @@ export function ModelPalette() {
             ref={inputRef}
             data-autofocus
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              if (e.target.value.trim()) setActive(0);
+            }}
             placeholder="Search models, makers, tasks (i2v, edit)…"
             aria-label="Search models"
             role="combobox"
@@ -388,9 +391,9 @@ export function ModelPalette() {
 
           {/* Preview */}
           <div className="hidden min-h-0 flex-1 sm:block">
-            <AnimatePresence mode="wait" initial={false}>
-              {current && <Preview key={current.id} model={current} onSelect={() => choose(current)} />}
-            </AnimatePresence>
+            {/* Keyed remount, no AnimatePresence: mode="wait" could keep the previous model's
+                preview on screen while the query changed quickly. */}
+            {current && <Preview key={current.id} model={current} onSelect={() => choose(current)} />}
           </div>
         </div>
 
